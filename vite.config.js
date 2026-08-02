@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon-192.png', 'icons/icon-512.png'],
       manifest: {
-        name: '像素工作台 Pixel Workbench',
-        short_name: '像素工作台',
+        name: '绚绚工作台',
+        short_name: '绚绚工作台',
         description: '个人一站式全能工作台：记账 · 待办 · 库存 · 生活记录 · 追剧 · 美食地图 · 随机点餐 · 食谱 · 生产任务',
         theme_color: '#F7F1E6',
         background_color: '#F7F1E6',
