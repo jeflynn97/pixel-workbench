@@ -145,7 +145,7 @@ function ShoppingItem({ item, onRemove, onToggleDone, onAddPrice, onRemovePrice 
             <div key={p.id} className={`flex justify-between text-xs px-2 py-1 pixel-corners-sm ${p.price === cheapest ? 'bg-mint' : 'bg-cream'}`}>
               <span>{p.store}{p.price === cheapest && ' · 最低价'}</span>
               <span className="flex items-center gap-2">
-                ¥{formatMoney(p.price)}
+                RM {formatMoney(p.price)}
                 <button onClick={() => onRemovePrice(item.id, p.id)} className="text-stone2-darker"><Trash2 size={12} /></button>
               </span>
             </div>
