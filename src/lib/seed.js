@@ -19,3 +19,8 @@ export const PAY_METHODS = [
   { id: 'bank', label: '银行账户' },
   { id: 'credit', label: '信用卡' },
 ]
+
+export const CURRENCIES = [
+  { id: 'RM', label: 'RM 令吉' },
+  { id: 'SGD', label: 'SGD 新币' },
+]
