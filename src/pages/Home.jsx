@@ -27,7 +27,7 @@ export default function Home({ onNavigate }) {
   const [fixedExpenses] = useLocalData('finance_fixedExpenses', [])
   const [incomeRecords] = useLocalData('finance_incomeRecords', [])
   const [creditRepayments] = useLocalData('finance_creditRepayments', [])
-  const [assets] = useLocalData('finance_assets', { cashHolding: 0, bankBalance: 0, otherAssets: [], otherLiabilities: [] })
+  const [assets] = useLocalData('finance_assets', { cashHolding: 0, bankBalance: 0, sgdCash: 0, sgdBank: 0, otherAssets: [], otherLiabilities: [] })
 
   const credit = computeCreditCard(transactions, creditRepayments)
   const totalAssets = computeTotalAssets(assets, credit.remaining)
@@ -58,7 +58,7 @@ export default function Home({ onNavigate }) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="font-pixel text-[10px] text-stone2-darker mb-1">PIXEL WORKBENCH</p>
-          <h1 className="font-display text-2xl">像素工作台 🏠</h1>
+          <h1 className="font-display text-2xl">绚绚工作台 🏠</h1>
         </div>
         <div className="flex gap-2">
           <button
@@ -95,6 +95,9 @@ export default function Home({ onNavigate }) {
             <p className="font-display text-base">RM {credit.remaining.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}</p>
           </div>
         </div>
+        {totalAssets.sgdTotal > 0 && (
+          <p className="text-xs text-stone2-darker mt-2">🇸🇬 新币资产 SGD {totalAssets.sgdTotal.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}</p>
+        )}
       </Card>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
