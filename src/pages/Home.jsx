@@ -27,9 +27,10 @@ export default function Home({ onNavigate }) {
   const [fixedExpenses] = useLocalData('finance_fixedExpenses', [])
   const [incomeRecords] = useLocalData('finance_incomeRecords', [])
   const [creditRepayments] = useLocalData('finance_creditRepayments', [])
+  const [creditOpeningBalance] = useLocalData('finance_creditOpeningBalance', 0)
   const [assets] = useLocalData('finance_assets', { cashHolding: 0, bankBalance: 0, sgdCash: 0, sgdBank: 0, otherAssets: [], otherLiabilities: [] })
 
-  const credit = computeCreditCard(transactions, creditRepayments)
+  const credit = computeCreditCard(transactions, creditRepayments, creditOpeningBalance)
   const totalAssets = computeTotalAssets(assets, credit.remaining)
   const monthSummary = computeMonthSummary({ transactions, fixedExpenses, incomeRecords })
 
