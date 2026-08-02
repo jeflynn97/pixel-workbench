@@ -5,8 +5,8 @@ import {
   Card, Button, Input, Select, SegmentedTabs, SectionTitle,
   EmptyState, Modal, ConfirmDialog, Tag, useToast,
 } from '../../components/ui.jsx'
-import { genId, todayStr, formatMoney, formatDateLabel } from '../../lib/utils.js'
-import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, PAY_METHODS } from '../../lib/seed.js'
+import { genId, todayStr, formatMoney, formatCurrency, formatDateLabel } from '../../lib/utils.js'
+import { DEFAULT_EXPENSE_CATEGORIES, DEFAULT_INCOME_CATEGORIES, PAY_METHODS, CURRENCIES } from '../../lib/seed.js'
 import {
   computeCreditCard, computeTotalAssets, computeMonthSummary,
   computeCategoryBreakdown, computePlaceBreakdown,
@@ -32,7 +32,7 @@ export default function Finance() {
   ])
   const [creditRepayments, setCreditRepayments] = useLocalData('finance_creditRepayments', [])
   const [assets, setAssets] = useLocalData('finance_assets', {
-    cashHolding: 0, bankBalance: 0, otherAssets: [], otherLiabilities: [],
+    cashHolding: 0, bankBalance: 0, sgdCash: 0, sgdBank: 0, otherAssets: [], otherLiabilities: [],
   })
   const { showToast, Toast } = useToast()
 
@@ -42,8 +42,9 @@ export default function Finance() {
   const credit = computeCreditCard(transactions, creditRepayments)
   const totalAssets = computeTotalAssets(assets, credit.remaining)
   const monthSummary = computeMonthSummary({ transactions, fixedExpenses, incomeRecords })
-  const categoryBreakdown = computeCategoryBreakdown(transactions)
-  const placeBreakdown = computePlaceBreakdown(transactions)
+  const categoryBreakdown = computeCategoryBreakdown(transactions, 'RM')
+  const placeBreakdown = computePlaceBreakdown(transactions, 'RM')
+  const sgdCategoryBreakdown = computeCategoryBreakdown(transactions, 'SGD')
 
   return (
     <div className="px-4 pt-3">
@@ -56,6 +57,7 @@ export default function Finance() {
             credit={credit}
             categoryBreakdown={categoryBreakdown}
             placeBreakdown={placeBreakdown}
+            sgdCategoryBreakdown={sgdCategoryBreakdown}
           />
         )}
         {tab === 'record' && (
@@ -90,23 +92,23 @@ export default function Finance() {
   )
 }
 
-function StatBox({ label, value, tone = 'default' }) {
+function StatBox({ label, value, tone = 'default', currency = 'RM' }) {
   const toneCls = tone === 'danger' ? 'text-pink-dark' : 'text-ink'
   return (
     <div className="pixel-corners-sm bg-white border-2 border-ink px-3 py-2">
       <p className="text-xs text-stone2-darker">{label}</p>
-      <p className={`font-display text-base ${toneCls}`}>RM {formatMoney(value)}</p>
+      <p className={`font-display text-base ${toneCls}`}>{formatCurrency(value, currency)}</p>
     </div>
   )
 }
 
-function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeBreakdown }) {
+function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeBreakdown, sgdCategoryBreakdown }) {
   return (
     <div className="space-y-3 pb-6">
       <Card className="bg-pink-light">
         <p className="text-xs text-stone2-darker mb-1">本月剩余可支配资金</p>
         <p className={`font-pixel text-xl mb-3 ${monthSummary.remaining < 0 ? 'text-pink-dark' : ''}`}>
-          RM {formatMoney(monthSummary.remaining)}
+          {formatCurrency(monthSummary.remaining, 'RM')}
         </p>
         <div className="grid grid-cols-2 gap-2">
           <StatBox label="本月收入" value={monthSummary.monthIncome} />
@@ -114,18 +116,51 @@ function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeB
           <StatBox label="固定支出" value={monthSummary.monthFixed} />
           <StatBox label="对公消费(本月)" value={monthSummary.monthPublicTx} />
         </div>
+        <p className="text-[11px] text-stone2-darker mt-2">以上均为 RM 计算，不含新币消费</p>
       </Card>
 
       <Card>
         <SectionTitle>总资产</SectionTitle>
-        <p className="font-pixel text-lg mb-2">RM {formatMoney(totalAssets.total)}</p>
+        <p className="font-pixel text-lg mb-2">{formatCurrency(totalAssets.total, 'RM')}</p>
         <div className="grid grid-cols-2 gap-2 text-xs text-stone2-darker">
-          <p>现金 RM {formatMoney(totalAssets.cash)}</p>
-          <p>银行存款 RM {formatMoney(totalAssets.bank)}</p>
-          <p>其他资产 RM {formatMoney(totalAssets.otherAssets)}</p>
-          <p>其他负债 -RM {formatMoney(totalAssets.otherLiabilities)}</p>
+          <p>现金 {formatCurrency(totalAssets.cash, 'RM')}</p>
+          <p>银行存款 {formatCurrency(totalAssets.bank, 'RM')}</p>
+          <p>其他资产 {formatCurrency(totalAssets.otherAssets, 'RM')}</p>
+          <p>其他负债 -{formatCurrency(totalAssets.otherLiabilities, 'RM')}</p>
         </div>
+        {totalAssets.sgdTotal > 0 && (
+          <div className="mt-3 pt-3 border-t-2 border-stone2">
+            <p className="text-xs text-stone2-darker mb-1">新币资产（单独统计，未换算入 RM）</p>
+            <p className="font-display text-base">{formatCurrency(totalAssets.sgdTotal, 'SGD')}</p>
+          </div>
+        )}
       </Card>
+
+      {(monthSummary.sgdMonthPersonal > 0 || monthSummary.sgdMonthPublic > 0 || sgdCategoryBreakdown.length > 0) && (
+        <Card className="bg-mint">
+          <SectionTitle>🇸🇬 新加坡消费（本月）</SectionTitle>
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <StatBox label="本月个人消费" value={monthSummary.sgdMonthPersonal} currency="SGD" />
+            <StatBox label="本月对公消费" value={monthSummary.sgdMonthPublic} currency="SGD" />
+          </div>
+          {sgdCategoryBreakdown.length > 0 && (
+            <div className="space-y-2 mt-2">
+              {sgdCategoryBreakdown.map((c) => (
+                <div key={c.category}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>{c.category}</span>
+                    <span>{formatCurrency(c.amount, 'SGD')} · {c.pct.toFixed(0)}%</span>
+                  </div>
+                  <div className="h-2 bg-white pixel-corners-sm">
+                    <div className="h-2 bg-mint-dark pixel-corners-sm" style={{ width: `${c.pct}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-[11px] text-stone2-darker mt-2">新币消费不并入 RM 预算，单独记录方便对账</p>
+        </Card>
+      )}
 
       <Card>
         <SectionTitle>信用卡</SectionTitle>
@@ -146,7 +181,7 @@ function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeB
               <div key={c.category}>
                 <div className="flex justify-between text-sm mb-1">
                   <span>{c.category}</span>
-                  <span>RM {formatMoney(c.amount)} · {c.pct.toFixed(0)}%</span>
+                  <span>{formatCurrency(c.amount, 'RM')} · {c.pct.toFixed(0)}%</span>
                 </div>
                 <div className="h-2 bg-stone2 pixel-corners-sm">
                   <div className="h-2 bg-pink pixel-corners-sm" style={{ width: `${c.pct}%` }} />
@@ -166,7 +201,7 @@ function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeB
             {placeBreakdown.map((p) => (
               <div key={p.place} className="flex justify-between text-sm">
                 <span className="flex items-center gap-1"><MapPin size={14} />{p.place}</span>
-                <span>RM {formatMoney(p.amount)}</span>
+                <span>{formatCurrency(p.amount, 'RM')}</span>
               </div>
             ))}
           </div>
@@ -183,7 +218,7 @@ function RecordTab({
   const [mode, setMode] = useState('expense')
 
   const [form, setForm] = useState({
-    date: todayStr(), payMethod: 'cash', isPublic: false,
+    date: todayStr(), payMethod: 'cash', isPublic: false, currency: 'RM',
     category: expenseCategories[0]?.name || '', place: '', amount: '', note: '',
   })
   const [incomeForm, setIncomeForm] = useState({
@@ -229,6 +264,16 @@ function RecordTab({
               <Input label="游玩地点" placeholder="例如：西湖" value={form.place} onChange={(e) => setForm({ ...form, place: e.target.value })} />
             )}
             <div>
+              <span className="block text-xs text-stone2-darker mb-1 font-display">币种</span>
+              <div className="flex gap-2">
+                {CURRENCIES.map((c) => (
+                  <Tag key={c.id} active={form.currency === c.id} onClick={() => setForm({ ...form, currency: c.id })} color="mint">
+                    {c.label}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+            <div>
               <span className="block text-xs text-stone2-darker mb-1 font-display">支付方式</span>
               <div className="flex gap-2">
                 {PAY_METHODS.map((p) => (
@@ -237,6 +282,9 @@ function RecordTab({
                   </Tag>
                 ))}
               </div>
+              {form.currency === 'SGD' && form.payMethod === 'credit' && (
+                <p className="text-[11px] text-stone2-darker mt-1">提醒：信用卡负债统计目前只计算 RM 消费</p>
+              )}
             </div>
             <div>
               <span className="block text-xs text-stone2-darker mb-1 font-display">消费属性</span>
@@ -271,11 +319,12 @@ function RecordTab({
             <div className="min-w-0">
               <p className="font-display text-sm truncate">
                 {t.category}{t.place ? ` · ${t.place}` : ''} {t.isPublic && <span className="text-butter bg-ink px-1 text-[10px] align-middle ml-1">对公</span>}
+                {(t.currency || 'RM') === 'SGD' && <span className="text-ink bg-mint px-1 text-[10px] align-middle ml-1">SGD</span>}
               </p>
               <p className="text-xs text-stone2-darker">{formatDateLabel(t.date)} · {PAY_METHODS.find((p) => p.id === t.payMethod)?.label}{t.note ? ` · ${t.note}` : ''}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="font-display">RM {formatMoney(t.amount)}</span>
+              <span className="font-display">{formatCurrency(t.amount, t.currency || 'RM')}</span>
               <button onClick={() => removeTx(t.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
           </Card>
@@ -287,7 +336,7 @@ function RecordTab({
               <p className="text-xs text-stone2-darker">{formatDateLabel(r.date)}{r.note ? ` · ${r.note}` : ''}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="font-display">RM {formatMoney(r.amount)}</span>
+              <span className="font-display">{formatCurrency(r.amount, 'RM')}</span>
               <button onClick={() => removeIncome(r.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
           </Card>
@@ -475,13 +524,24 @@ function AssetsTab({ assets, setAssets }) {
   return (
     <div className="space-y-3 pb-6">
       <Card>
-        <SectionTitle>现金 & 银行存款</SectionTitle>
+        <SectionTitle>现金 & 银行存款（RM）</SectionTitle>
         <div className="space-y-2.5">
           <Input label="现金持有金额" type="number" value={assets.cashHolding}
             onChange={(e) => setAssets({ ...assets, cashHolding: Number(e.target.value) || 0 })} />
           <Input label="银行存款余额" type="number" value={assets.bankBalance}
             onChange={(e) => setAssets({ ...assets, bankBalance: Number(e.target.value) || 0 })} />
         </div>
+      </Card>
+
+      <Card className="bg-mint">
+        <SectionTitle>🇸🇬 新币持有</SectionTitle>
+        <div className="space-y-2.5">
+          <Input label="新币现金" type="number" value={assets.sgdCash ?? 0}
+            onChange={(e) => setAssets({ ...assets, sgdCash: Number(e.target.value) || 0 })} />
+          <Input label="新币银行存款" type="number" value={assets.sgdBank ?? 0}
+            onChange={(e) => setAssets({ ...assets, sgdBank: Number(e.target.value) || 0 })} />
+        </div>
+        <p className="text-[11px] text-stone2-darker mt-2">新币资产单独统计，不并入 RM 总资产（不做汇率换算）</p>
       </Card>
 
       <Card>
