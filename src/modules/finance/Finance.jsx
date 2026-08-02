@@ -95,7 +95,7 @@ function StatBox({ label, value, tone = 'default' }) {
   return (
     <div className="pixel-corners-sm bg-white border-2 border-ink px-3 py-2">
       <p className="text-xs text-stone2-darker">{label}</p>
-      <p className={`font-display text-base ${toneCls}`}>¥{formatMoney(value)}</p>
+      <p className={`font-display text-base ${toneCls}`}>RM {formatMoney(value)}</p>
     </div>
   )
 }
@@ -106,7 +106,7 @@ function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeB
       <Card className="bg-pink-light">
         <p className="text-xs text-stone2-darker mb-1">本月剩余可支配资金</p>
         <p className={`font-pixel text-xl mb-3 ${monthSummary.remaining < 0 ? 'text-pink-dark' : ''}`}>
-          ¥{formatMoney(monthSummary.remaining)}
+          RM {formatMoney(monthSummary.remaining)}
         </p>
         <div className="grid grid-cols-2 gap-2">
           <StatBox label="本月收入" value={monthSummary.monthIncome} />
@@ -118,12 +118,12 @@ function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeB
 
       <Card>
         <SectionTitle>总资产</SectionTitle>
-        <p className="font-pixel text-lg mb-2">¥{formatMoney(totalAssets.total)}</p>
+        <p className="font-pixel text-lg mb-2">RM {formatMoney(totalAssets.total)}</p>
         <div className="grid grid-cols-2 gap-2 text-xs text-stone2-darker">
-          <p>现金 ¥{formatMoney(totalAssets.cash)}</p>
-          <p>银行存款 ¥{formatMoney(totalAssets.bank)}</p>
-          <p>其他资产 ¥{formatMoney(totalAssets.otherAssets)}</p>
-          <p>其他负债 -¥{formatMoney(totalAssets.otherLiabilities)}</p>
+          <p>现金 RM {formatMoney(totalAssets.cash)}</p>
+          <p>银行存款 RM {formatMoney(totalAssets.bank)}</p>
+          <p>其他资产 RM {formatMoney(totalAssets.otherAssets)}</p>
+          <p>其他负债 -RM {formatMoney(totalAssets.otherLiabilities)}</p>
         </div>
       </Card>
 
@@ -146,7 +146,7 @@ function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeB
               <div key={c.category}>
                 <div className="flex justify-between text-sm mb-1">
                   <span>{c.category}</span>
-                  <span>¥{formatMoney(c.amount)} · {c.pct.toFixed(0)}%</span>
+                  <span>RM {formatMoney(c.amount)} · {c.pct.toFixed(0)}%</span>
                 </div>
                 <div className="h-2 bg-stone2 pixel-corners-sm">
                   <div className="h-2 bg-pink pixel-corners-sm" style={{ width: `${c.pct}%` }} />
@@ -166,7 +166,7 @@ function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeB
             {placeBreakdown.map((p) => (
               <div key={p.place} className="flex justify-between text-sm">
                 <span className="flex items-center gap-1"><MapPin size={14} />{p.place}</span>
-                <span>¥{formatMoney(p.amount)}</span>
+                <span>RM {formatMoney(p.amount)}</span>
               </div>
             ))}
           </div>
@@ -275,7 +275,7 @@ function RecordTab({
               <p className="text-xs text-stone2-darker">{formatDateLabel(t.date)} · {PAY_METHODS.find((p) => p.id === t.payMethod)?.label}{t.note ? ` · ${t.note}` : ''}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="font-display">¥{formatMoney(t.amount)}</span>
+              <span className="font-display">RM {formatMoney(t.amount)}</span>
               <button onClick={() => removeTx(t.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
           </Card>
@@ -287,7 +287,7 @@ function RecordTab({
               <p className="text-xs text-stone2-darker">{formatDateLabel(r.date)}{r.note ? ` · ${r.note}` : ''}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="font-display">¥{formatMoney(r.amount)}</span>
+              <span className="font-display">RM {formatMoney(r.amount)}</span>
               <button onClick={() => removeIncome(r.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
           </Card>
@@ -329,7 +329,7 @@ function FixedTab({ fixedExpenses, setFixedExpenses }) {
           <Card key={f.id} className={`flex items-center justify-between py-2.5 ${!f.active ? 'opacity-50' : ''}`}>
             <div>
               <p className="font-display text-sm">{f.name}</p>
-              <p className="text-xs text-stone2-darker">¥{formatMoney(f.amount)}/月{f.note ? ` · ${f.note}` : ''}</p>
+              <p className="text-xs text-stone2-darker">RM {formatMoney(f.amount)}/月{f.note ? ` · ${f.note}` : ''}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button size="sm" variant={f.active ? 'mint' : 'secondary'} onClick={() => toggle(f.id)}>
@@ -423,7 +423,7 @@ function CreditTab({ credit, creditRepayments, setCreditRepayments, transactions
           <Card key={r.id} className="flex items-center justify-between py-2.5">
             <p className="text-sm">{formatDateLabel(r.date)}</p>
             <div className="flex items-center gap-2">
-              <span className="font-display">¥{formatMoney(r.amount)}</span>
+              <span className="font-display">RM {formatMoney(r.amount)}</span>
               <button onClick={() => remove(r.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
           </Card>
@@ -435,7 +435,7 @@ function CreditTab({ credit, creditRepayments, setCreditRepayments, transactions
         {creditTx.map((t) => (
           <Card key={t.id} className="flex items-center justify-between py-2.5">
             <p className="text-sm">{t.category} · {formatDateLabel(t.date)}</p>
-            <span className="font-display">¥{formatMoney(t.amount)}</span>
+            <span className="font-display">RM {formatMoney(t.amount)}</span>
           </Card>
         ))}
       </div>
@@ -495,7 +495,7 @@ function AssetsTab({ assets, setAssets }) {
           {(assets.otherAssets || []).map((a) => (
             <div key={a.id} className="flex justify-between text-sm">
               <span>{a.name}</span>
-              <span className="flex items-center gap-2">¥{formatMoney(a.amount)}
+              <span className="flex items-center gap-2">RM {formatMoney(a.amount)}
                 <button onClick={() => removeAsset(a.id)} className="text-stone2-darker"><Trash2 size={14} /></button>
               </span>
             </div>
@@ -514,7 +514,7 @@ function AssetsTab({ assets, setAssets }) {
           {(assets.otherLiabilities || []).map((a) => (
             <div key={a.id} className="flex justify-between text-sm">
               <span>{a.name}</span>
-              <span className="flex items-center gap-2">¥{formatMoney(a.amount)}
+              <span className="flex items-center gap-2">RM {formatMoney(a.amount)}
                 <button onClick={() => removeLiability(a.id)} className="text-stone2-darker"><Trash2 size={14} /></button>
               </span>
             </div>
