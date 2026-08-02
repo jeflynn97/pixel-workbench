@@ -11,6 +11,7 @@ export const ALL_KEYS = [
   'finance_transactions',
   'finance_categories',
   'finance_creditRepayments',
+  'finance_creditOpeningBalance',
   'finance_assets',
   // 待办
   'todos',
