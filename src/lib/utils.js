@@ -15,6 +15,11 @@ export function formatMoney(n) {
   return num.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+// 带币种前缀的金额格式化，例如 formatCurrency(88, 'SGD') -> "SGD 88.00"
+export function formatCurrency(n, currency = 'RM') {
+  return `${currency} ${formatMoney(n)}`
+}
+
 export function isSameMonth(dateStr, ref = new Date()) {
   if (!dateStr) return false
   const d = new Date(dateStr)
