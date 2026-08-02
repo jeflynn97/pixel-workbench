@@ -31,6 +31,7 @@ export default function Finance() {
     ...DEFAULT_INCOME_CATEGORIES,
   ])
   const [creditRepayments, setCreditRepayments] = useLocalData('finance_creditRepayments', [])
+  const [creditOpeningBalance, setCreditOpeningBalance] = useLocalData('finance_creditOpeningBalance', 0)
   const [assets, setAssets] = useLocalData('finance_assets', {
     cashHolding: 0, bankBalance: 0, sgdCash: 0, sgdBank: 0, otherAssets: [], otherLiabilities: [],
   })
@@ -39,7 +40,7 @@ export default function Finance() {
   const expenseCategories = categories.filter((c) => c.type === 'expense')
   const incomeCategories = categories.filter((c) => c.type === 'income')
 
-  const credit = computeCreditCard(transactions, creditRepayments)
+  const credit = computeCreditCard(transactions, creditRepayments, creditOpeningBalance)
   const totalAssets = computeTotalAssets(assets, credit.remaining)
   const monthSummary = computeMonthSummary({ transactions, fixedExpenses, incomeRecords })
   const categoryBreakdown = computeCategoryBreakdown(transactions, 'RM')
@@ -82,6 +83,8 @@ export default function Finance() {
             credit={credit}
             creditRepayments={creditRepayments}
             setCreditRepayments={setCreditRepayments}
+            creditOpeningBalance={creditOpeningBalance}
+            setCreditOpeningBalance={setCreditOpeningBalance}
             transactions={transactions}
           />
         )}
@@ -434,9 +437,10 @@ function CategoriesTab({ categories, setCategories }) {
   )
 }
 
-function CreditTab({ credit, creditRepayments, setCreditRepayments, transactions }) {
+function CreditTab({ credit, creditRepayments, setCreditRepayments, creditOpeningBalance, setCreditOpeningBalance, transactions }) {
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayStr())
+  const [openingInput, setOpeningInput] = useState(String(creditOpeningBalance || ''))
   const creditTx = transactions.filter((t) => t.payMethod === 'credit').slice(0, 20)
 
   function addRepay() {
@@ -447,6 +451,9 @@ function CreditTab({ credit, creditRepayments, setCreditRepayments, transactions
   function remove(id) {
     setCreditRepayments(creditRepayments.filter((r) => r.id !== id))
   }
+  function saveOpeningBalance() {
+    setCreditOpeningBalance(Number(openingInput) || 0)
+  }
 
   return (
     <div className="space-y-3 pb-6">
@@ -456,7 +463,22 @@ function CreditTab({ credit, creditRepayments, setCreditRepayments, transactions
           <StatBox label="已还款" value={credit.repaid} />
           <StatBox label="待还款" value={credit.remaining} tone="danger" />
         </div>
+        <p className="text-[11px] text-stone2-darker mt-2">
+          总负债 = 期初负债 {formatCurrency(credit.openingBalance, 'RM')} + 之后新记录的信用卡消费 {formatCurrency(credit.txDebt, 'RM')}
+        </p>
       </Card>
+
+      <Card className="bg-butter">
+        <SectionTitle>期初负债（旧账，一次性录入）</SectionTitle>
+        <p className="text-xs text-stone2-darker mb-2">
+          用来登记开始用这个 App 之前，信用卡已经欠下的钱。这笔钱不会算进"记一笔"里的月度消费统计，只会加进总负债里。
+        </p>
+        <div className="flex gap-2">
+          <Input type="number" placeholder="例如 4939.85" value={openingInput} onChange={(e) => setOpeningInput(e.target.value)} className="flex-1" />
+          <Button size="sm" onClick={saveOpeningBalance}>保存</Button>
+        </div>
+      </Card>
+
       <Card>
         <SectionTitle>登记还款</SectionTitle>
         <div className="space-y-2.5">
@@ -472,19 +494,19 @@ function CreditTab({ credit, creditRepayments, setCreditRepayments, transactions
           <Card key={r.id} className="flex items-center justify-between py-2.5">
             <p className="text-sm">{formatDateLabel(r.date)}</p>
             <div className="flex items-center gap-2">
-              <span className="font-display">RM {formatMoney(r.amount)}</span>
+              <span className="font-display">{formatCurrency(r.amount, 'RM')}</span>
               <button onClick={() => remove(r.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
           </Card>
         ))}
       </div>
-      <SectionTitle>信用卡消费明细</SectionTitle>
+      <SectionTitle>信用卡消费明细（记一笔中新增的）</SectionTitle>
       <div className="space-y-2">
         {creditTx.length === 0 && <EmptyState emoji="💳" text="还没有信用卡消费" />}
         {creditTx.map((t) => (
           <Card key={t.id} className="flex items-center justify-between py-2.5">
             <p className="text-sm">{t.category} · {formatDateLabel(t.date)}</p>
-            <span className="font-display">RM {formatMoney(t.amount)}</span>
+            <span className="font-display">{formatCurrency(t.amount, t.currency || 'RM')}</span>
           </Card>
         ))}
       </div>
