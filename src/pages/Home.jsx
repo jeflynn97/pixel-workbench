@@ -58,7 +58,7 @@ export default function Home({ onNavigate }) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="font-pixel text-[10px] text-stone2-darker mb-1">PIXEL WORKBENCH</p>
-          <h1 className="font-display text-2xl">绚绚工作台 🏠</h1>
+          <h1 className="font-display text-2xl">像素工作台 🏠</h1>
         </div>
         <div className="flex gap-2">
           <button
@@ -83,16 +83,16 @@ export default function Home({ onNavigate }) {
       <Card className="mb-4 bg-pink-light">
         <p className="font-display text-xs text-stone2-darker mb-1">本月剩余可支配资金</p>
         <p className={`font-pixel text-xl mb-3 ${monthSummary.remaining < 0 ? 'text-pink-dark' : 'text-ink'}`}>
-          ¥{monthSummary.remaining.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}
+          RM {monthSummary.remaining.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}
         </p>
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div className="pixel-corners-sm bg-white border-2 border-ink px-3 py-2">
             <p className="text-xs text-stone2-darker">个人总资产</p>
-            <p className="font-display text-base">¥{totalAssets.total.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}</p>
+            <p className="font-display text-base">RM {totalAssets.total.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}</p>
           </div>
           <div className="pixel-corners-sm bg-white border-2 border-ink px-3 py-2">
             <p className="text-xs text-stone2-darker">信用卡待还</p>
-            <p className="font-display text-base">¥{credit.remaining.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}</p>
+            <p className="font-display text-base">RM {credit.remaining.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}</p>
           </div>
         </div>
       </Card>
