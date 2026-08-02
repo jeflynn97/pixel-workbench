@@ -11,14 +11,15 @@ export function txCurrency(t) {
   return t.currency || 'RM'
 }
 
-export function computeCreditCard(transactions, creditRepayments) {
+export function computeCreditCard(transactions, creditRepayments, openingBalance = 0) {
   // 信用卡目前仅按 RM 计算（新币消费默认走现金/银行）
-  const totalDebt = transactions
+  const txDebt = transactions
     .filter((t) => t.payMethod === 'credit' && txCurrency(t) === 'RM')
     .reduce((sum, t) => sum + Number(t.amount || 0), 0)
+  const totalDebt = Number(openingBalance || 0) + txDebt
   const repaid = (creditRepayments || []).reduce((sum, r) => sum + Number(r.amount || 0), 0)
   const remaining = Math.max(0, totalDebt - repaid)
-  return { totalDebt, repaid, remaining }
+  return { totalDebt, txDebt, openingBalance: Number(openingBalance || 0), repaid, remaining }
 }
 
 export function computeTotalAssets(assets, creditRemaining) {
