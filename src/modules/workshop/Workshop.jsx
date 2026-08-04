@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, Minus, Snowflake, CheckCircle2, Circle } from 'lucide-react'
+import { Plus, Trash2, Minus, Snowflake, CheckCircle2, Circle, Pencil } from 'lucide-react'
 import { useLocalData } from '../../lib/useLocalData.js'
 import {
-  Card, Button, Input, SegmentedTabs, SectionTitle, EmptyState, Tag,
+  Card, Button, Input, SegmentedTabs, SectionTitle, EmptyState, Tag, Modal,
 } from '../../components/ui.jsx'
 import { genId, todayStr, formatMoney, formatDateLabel } from '../../lib/utils.js'
 import { DEFAULT_INGREDIENTS } from '../../lib/seed.js'
@@ -212,6 +212,7 @@ function TasksTab() {
   const [tasks, setTasks] = useLocalData('workertasks_tasks', [])
   const [categories, setCategories] = useLocalData('workertasks_categories', [])
   const [form, setForm] = useState({ snackName: '', quantity: '', unit: '个' })
+  const [editing, setEditing] = useState(null)
 
   const pending = tasks.filter((t) => t.status === 'pending').sort((a, b) => b.createdAt - a.createdAt)
   const done = tasks.filter((t) => t.status === 'done').sort((a, b) => b.createdAt - a.createdAt)
@@ -236,6 +237,11 @@ function TasksTab() {
   }
   function removeCategory(name) {
     setCategories(categories.filter((c) => c !== name))
+  }
+  function saveEdit() {
+    if (!editing.snackName.trim() || !editing.quantity) return
+    setTasks(tasks.map((t) => (t.id === editing.id ? { ...editing, snackName: editing.snackName.trim() } : t)))
+    setEditing(null)
   }
 
   return (
@@ -280,7 +286,10 @@ function TasksTab() {
                 <p className="text-xs text-stone2-darker">{t.quantity}{t.unit} · {formatDateLabel(new Date(t.createdAt).toISOString())}</p>
               </span>
             </button>
-            <button onClick={() => remove(t.id)} className="text-stone2-darker shrink-0"><Trash2 size={16} /></button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={() => setEditing({ ...t })} className="text-stone2-darker"><Pencil size={16} /></button>
+              <button onClick={() => remove(t.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
+            </div>
           </Card>
         ))}
       </div>
@@ -298,7 +307,10 @@ function TasksTab() {
                     <p className="text-xs text-stone2-darker">{t.quantity}{t.unit}</p>
                   </span>
                 </button>
-                <button onClick={() => remove(t.id)} className="text-stone2-darker shrink-0"><Trash2 size={16} /></button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => setEditing({ ...t })} className="text-stone2-darker"><Pencil size={16} /></button>
+                  <button onClick={() => remove(t.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
+                </div>
               </Card>
             ))}
           </div>
@@ -318,6 +330,26 @@ function TasksTab() {
           </div>
         </>
       )}
+
+      <Modal open={!!editing} onClose={() => setEditing(null)} title="编辑任务"
+        footer={<Button className="w-full" onClick={saveEdit}>保存修改</Button>}>
+        {editing && (
+          <div className="space-y-2.5">
+            <Input label="零食品类" value={editing.snackName} onChange={(e) => setEditing({ ...editing, snackName: e.target.value })} />
+            <div className="flex gap-2">
+              <Input label="制作数量" type="number" value={editing.quantity} onChange={(e) => setEditing({ ...editing, quantity: e.target.value })} className="flex-1" />
+              <div className="flex-1">
+                <span className="block text-xs text-stone2-darker mb-1 font-display">单位</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {UNIT_PRESETS.map((u) => (
+                    <Tag key={u} active={editing.unit === u} onClick={() => setEditing({ ...editing, unit: u })} color="mint">{u}</Tag>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
