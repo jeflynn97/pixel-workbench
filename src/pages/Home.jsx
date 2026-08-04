@@ -57,7 +57,7 @@ export default function Home({ onNavigate }) {
     <div className="px-4 pt-4 pb-24 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="font-pixel text-[10px] text-stone2-darker mb-1">PIXEL WORKBENCH</p>
+          <p className="font-pixel text-[10px] text-stone2-darker mb-1">XUANXUAN WORKBENCH</p>
           <h1 className="font-display text-2xl">绚绚工作台 🏠</h1>
         </div>
         <div className="flex gap-2">
