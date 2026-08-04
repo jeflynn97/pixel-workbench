@@ -1,25 +1,24 @@
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import {
-  Wallet, ListChecks, Package, HeartPulse, Clapperboard,
-  MapPinned, Dices, BookOpen, ClipboardList, Download, Upload,
+  Wallet, ListChecks, Factory, HeartPulse, Clapperboard,
+  MapPinned, Dices, BookOpen, Download, Upload, Plus, Zap,
 } from 'lucide-react'
-import { Card } from '../components/ui.jsx'
+import { Card, Button, Input, Select, Tag, SegmentedTabs, useToast } from '../components/ui.jsx'
 import { useLocalData } from '../lib/useLocalData.js'
 import { computeCreditCard, computeTotalAssets, computeMonthSummary } from '../lib/financeCalc.js'
 import { exportAllData, importAllData } from '../lib/storage.js'
-import { useToast } from '../components/ui.jsx'
-import { useRef, useState } from 'react'
+import { genId, todayStr } from '../lib/utils.js'
+import { DEFAULT_EXPENSE_CATEGORIES, CURRENCIES } from '../lib/seed.js'
 
 const MODULES = [
   { key: 'finance', name: '全能记账', desc: '收支·资产·信用卡', icon: Wallet, color: 'bg-pink' },
   { key: 'todos', name: '公私待办', desc: '工作与私人事务', icon: ListChecks, color: 'bg-mint' },
-  { key: 'inventory', name: '店铺库存', desc: '食材·采购·冻干', icon: Package, color: 'bg-butter' },
+  { key: 'workshop', name: '店铺工作台', desc: '库存·采购·生产任务', icon: Factory, color: 'bg-butter' },
   { key: 'life', name: '生活记录', desc: '日记·喝水·运动', icon: HeartPulse, color: 'bg-pink-light' },
   { key: 'watchlist', name: '追剧清单', desc: '剧集·综艺·电影', icon: Clapperboard, color: 'bg-mint' },
   { key: 'foodmap', name: '美食地图', desc: '打卡·探店记录', icon: MapPinned, color: 'bg-butter' },
   { key: 'randompicker', name: '随机点餐', desc: '选择困难救星', icon: Dices, color: 'bg-pink' },
   { key: 'recipes', name: '食谱管理', desc: '库存·收藏食谱', icon: BookOpen, color: 'bg-mint' },
-  { key: 'workertasks', name: '生产任务', desc: '工人零食制作看板', icon: ClipboardList, color: 'bg-butter' },
 ]
 
 export default function Home({ onNavigate }) {
@@ -101,6 +100,8 @@ export default function Home({ onNavigate }) {
         )}
       </Card>
 
+      <QuickActions showToast={showToast} />
+
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {MODULES.map((m) => (
           <button key={m.key} onClick={() => onNavigate(m.key)} className="text-left">
@@ -118,5 +119,104 @@ export default function Home({ onNavigate }) {
       </p>
       {Toast}
     </div>
+  )
+}
+
+const QUICK_TABS = [
+  { value: 'todo', label: '快捷待办' },
+  { value: 'expense', label: '快捷记账' },
+]
+
+function QuickActions({ showToast }) {
+  const [mode, setMode] = useState('todo')
+  const [todos, setTodos] = useLocalData('todos', [])
+  const [transactions, setTransactions] = useLocalData('finance_transactions', [])
+  const [categories] = useLocalData('finance_categories', DEFAULT_EXPENSE_CATEGORIES)
+
+  const expenseCategories = categories.filter((c) => c.type === 'expense')
+
+  const [todoText, setTodoText] = useState('')
+  const [todoCategory, setTodoCategory] = useState('work')
+
+  const [expForm, setExpForm] = useState({
+    category: expenseCategories[0]?.name || '吃饭',
+    amount: '',
+    currency: 'RM',
+  })
+
+  function addTodo() {
+    if (!todoText.trim()) return
+    setTodos([{ id: genId(), category: todoCategory, text: todoText.trim(), done: false, createdAt: Date.now() }, ...todos])
+    setTodoText('')
+    showToast('已加入待办 ✅')
+  }
+
+  function addExpense() {
+    if (!expForm.amount || Number(expForm.amount) <= 0) return showToast('请输入有效金额')
+    setTransactions([{
+      id: genId(),
+      date: todayStr(),
+      payMethod: 'cash',
+      isPublic: false,
+      currency: expForm.currency,
+      category: expForm.category,
+      place: '',
+      amount: Number(expForm.amount),
+      note: '',
+    }, ...transactions])
+    setExpForm({ ...expForm, amount: '' })
+    showToast('已记一笔 ✅')
+  }
+
+  return (
+    <Card className="mb-4">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Zap size={16} />
+        <span className="font-display text-sm">快捷操作</span>
+      </div>
+      <SegmentedTabs tabs={QUICK_TABS} value={mode} onChange={setMode} />
+
+      {mode === 'todo' ? (
+        <div className="mt-3 space-y-2.5">
+          <div className="flex gap-2">
+            <Tag active={todoCategory === 'work'} onClick={() => setTodoCategory('work')} color="butter">工作</Tag>
+            <Tag active={todoCategory === 'personal'} onClick={() => setTodoCategory('personal')}>私人</Tag>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="输入待办事项…"
+              value={todoText}
+              onChange={(e) => setTodoText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+              className="flex-1"
+            />
+            <Button onClick={addTodo}><Plus size={16} /></Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 space-y-2.5">
+          <div className="flex gap-2">
+            {CURRENCIES.map((c) => (
+              <Tag key={c.id} active={expForm.currency === c.id} onClick={() => setExpForm({ ...expForm, currency: c.id })} color="mint">
+                {c.id}
+              </Tag>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Select value={expForm.category} onChange={(e) => setExpForm({ ...expForm, category: e.target.value })} className="flex-1">
+              {expenseCategories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </Select>
+            <Input
+              type="number" inputMode="decimal" placeholder="金额" value={expForm.amount}
+              onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && addExpense()}
+              className="w-24"
+            />
+            <Button onClick={addExpense}><Plus size={16} /></Button>
+          </div>
+          <p className="text-[11px] text-stone2-darker">默认现金·个人消费·今天，其他细节可在「全能记账」里补充</p>
+        </div>
+      )}
+    </Card>
   )
 }
