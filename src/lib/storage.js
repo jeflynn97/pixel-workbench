@@ -21,6 +21,9 @@ export const ALL_KEYS = [
   'inventory_frozen',
   // 生活记录
   'life_logs',
+  // 韩语学习
+  'korean_checkins',
+  'korean_mastered',
   // 追剧
   'watchlist',
   // 美食地图
