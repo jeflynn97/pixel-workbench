@@ -9,6 +9,7 @@ import { computeCreditCard, computeTotalAssets, computeMonthSummary } from '../l
 import { exportAllData, importAllData } from '../lib/storage.js'
 import { genId, todayStr } from '../lib/utils.js'
 import { DEFAULT_EXPENSE_CATEGORIES, CURRENCIES } from '../lib/seed.js'
+import AccountSync from '../components/AccountSync.jsx'
 
 const MODULES = [
   { key: 'finance', name: '全能记账', desc: '收支·资产·信用卡', icon: Wallet, color: 'bg-pink' },
@@ -57,7 +58,7 @@ export default function Home({ onNavigate }) {
     <div className="px-4 pt-4 pb-24 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="font-pixel text-[10px] text-stone2-darker mb-1">XUANXUAN WORKBENCH</p>
+          <p className="font-pixel text-[10px] text-stone2-darker mb-1">PIXEL WORKBENCH</p>
           <h1 className="font-display text-2xl">绚绚工作台 🏠</h1>
         </div>
         <div className="flex gap-2">
@@ -99,6 +100,8 @@ export default function Home({ onNavigate }) {
           <p className="text-xs text-stone2-darker mt-2">🇸🇬 新币资产 SGD {totalAssets.sgdTotal.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}</p>
         )}
       </Card>
+
+      <AccountSync />
 
       <QuickActions showToast={showToast} />
 
