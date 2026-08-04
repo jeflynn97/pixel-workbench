@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import {
-  Wallet, ListChecks, Factory, HeartPulse, Clapperboard,
+  Wallet, ListChecks, Factory, Languages, Clapperboard,
   MapPinned, Dices, BookOpen, Download, Upload, Plus, Zap,
 } from 'lucide-react'
 import { Card, Button, Input, Select, Tag, SegmentedTabs, useToast } from '../components/ui.jsx'
@@ -14,7 +14,7 @@ const MODULES = [
   { key: 'finance', name: '全能记账', desc: '收支·资产·信用卡', icon: Wallet, color: 'bg-pink' },
   { key: 'todos', name: '公私待办', desc: '工作与私人事务', icon: ListChecks, color: 'bg-mint' },
   { key: 'workshop', name: '店铺工作台', desc: '库存·采购·生产任务', icon: Factory, color: 'bg-butter' },
-  { key: 'life', name: '生活记录', desc: '日记·喝水·运动', icon: HeartPulse, color: 'bg-pink-light' },
+  { key: 'korean', name: '韩语学习', desc: '短语·打卡·连续天数', icon: Languages, color: 'bg-pink-light' },
   { key: 'watchlist', name: '追剧清单', desc: '剧集·综艺·电影', icon: Clapperboard, color: 'bg-mint' },
   { key: 'foodmap', name: '美食地图', desc: '打卡·探店记录', icon: MapPinned, color: 'bg-butter' },
   { key: 'randompicker', name: '随机点餐', desc: '选择困难救星', icon: Dices, color: 'bg-pink' },
