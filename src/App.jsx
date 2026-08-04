@@ -3,24 +3,22 @@ import Home from './pages/Home.jsx'
 import Header from './components/Header.jsx'
 import Finance from './modules/finance/Finance.jsx'
 import Todos from './modules/todos/Todos.jsx'
-import Inventory from './modules/inventory/Inventory.jsx'
+import Workshop from './modules/workshop/Workshop.jsx'
 import Life from './modules/life/Life.jsx'
 import Watchlist from './modules/watchlist/Watchlist.jsx'
 import FoodMap from './modules/foodmap/FoodMap.jsx'
 import RandomPicker from './modules/randompicker/RandomPicker.jsx'
 import Recipes from './modules/recipes/Recipes.jsx'
-import WorkerTasks from './modules/workertasks/WorkerTasks.jsx'
 
 const MODULE_MAP = {
   finance: { title: '全能记账', emoji: '💰', Comp: Finance },
   todos: { title: '公私待办', emoji: '📋', Comp: Todos },
-  inventory: { title: '店铺库存', emoji: '📦', Comp: Inventory },
+  workshop: { title: '店铺工作台', emoji: '🏭', Comp: Workshop },
   life: { title: '生活记录', emoji: '🌿', Comp: Life },
   watchlist: { title: '追剧清单', emoji: '🎬', Comp: Watchlist },
   foodmap: { title: '美食地图', emoji: '📍', Comp: FoodMap },
   randompicker: { title: '随机点餐', emoji: '🎲', Comp: RandomPicker },
   recipes: { title: '食谱管理', emoji: '📖', Comp: Recipes },
-  workertasks: { title: '生产任务', emoji: '🧾', Comp: WorkerTasks },
 }
 
 export default function App() {
