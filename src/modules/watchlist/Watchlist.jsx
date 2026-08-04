@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Pencil } from 'lucide-react'
 import { useLocalData } from '../../lib/useLocalData.js'
-import { Card, Button, Input, Select, Tag, EmptyState } from '../../components/ui.jsx'
+import { Card, Button, Input, Select, Tag, EmptyState, Modal } from '../../components/ui.jsx'
 import { genId } from '../../lib/utils.js'
 
 const TYPES = ['电视剧', '综艺', '电影']
@@ -10,6 +10,7 @@ export default function Watchlist() {
   const [items, setItems] = useLocalData('watchlist', [])
   const [form, setForm] = useState({ title: '', type: '电视剧', note: '' })
   const [filter, setFilter] = useState('all')
+  const [editing, setEditing] = useState(null)
 
   function add() {
     if (!form.title.trim()) return
@@ -21,6 +22,11 @@ export default function Watchlist() {
   }
   function remove(id) {
     setItems(items.filter((i) => i.id !== id))
+  }
+  function saveEdit() {
+    if (!editing.title.trim()) return
+    setItems(items.map((i) => (i.id === editing.id ? { ...editing, title: editing.title.trim() } : i)))
+    setEditing(null)
   }
 
   const filtered = items
@@ -56,10 +62,26 @@ export default function Watchlist() {
                 <p className="text-xs text-stone2-darker">{i.type}{i.note ? ` · ${i.note}` : ''}</p>
               </span>
             </label>
-            <button onClick={() => remove(i.id)} className="text-stone2-darker shrink-0"><Trash2 size={16} /></button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button onClick={() => setEditing({ ...i })} className="text-stone2-darker"><Pencil size={16} /></button>
+              <button onClick={() => remove(i.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
+            </div>
           </Card>
         ))}
       </div>
+
+      <Modal open={!!editing} onClose={() => setEditing(null)} title="编辑"
+        footer={<Button className="w-full" onClick={saveEdit}>保存修改</Button>}>
+        {editing && (
+          <div className="space-y-2.5">
+            <Input label="剧名/片名" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+            <Select label="类型" value={editing.type} onChange={(e) => setEditing({ ...editing, type: e.target.value })}>
+              {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </Select>
+            <Input label="备注（推荐人/看点）" value={editing.note} onChange={(e) => setEditing({ ...editing, note: e.target.value })} />
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
