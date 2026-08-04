@@ -1,1 +1,126 @@
 
+// 韩语学习模块的静态内容库：字母表 + 分类常用短语
+// 之后想扩充内容，直接在这里加数据即可，不用改组件逻辑
+
+export const HANGUL_CONSONANTS = [
+  { id: 'g', char: 'ㄱ', romanization: 'g/k', example: '가 (ga)' },
+  { id: 'n', char: 'ㄴ', romanization: 'n', example: '나 (na)' },
+  { id: 'd', char: 'ㄷ', romanization: 'd/t', example: '다 (da)' },
+  { id: 'r', char: 'ㄹ', romanization: 'r/l', example: '라 (ra)' },
+  { id: 'm', char: 'ㅁ', romanization: 'm', example: '마 (ma)' },
+  { id: 'b', char: 'ㅂ', romanization: 'b/p', example: '바 (ba)' },
+  { id: 's', char: 'ㅅ', romanization: 's', example: '사 (sa)' },
+  { id: 'ng', char: 'ㅇ', romanization: '(无声/ng)', example: '아 (a)' },
+  { id: 'j', char: 'ㅈ', romanization: 'j', example: '자 (ja)' },
+  { id: 'ch', char: 'ㅊ', romanization: 'ch', example: '차 (cha)' },
+  { id: 'k', char: 'ㅋ', romanization: 'k', example: '카 (ka)' },
+  { id: 't', char: 'ㅌ', romanization: 't', example: '타 (ta)' },
+  { id: 'p', char: 'ㅍ', romanization: 'p', example: '파 (pa)' },
+  { id: 'h', char: 'ㅎ', romanization: 'h', example: '하 (ha)' },
+]
+
+export const HANGUL_VOWELS = [
+  { id: 'a', char: 'ㅏ', romanization: 'a' },
+  { id: 'ya', char: 'ㅑ', romanization: 'ya' },
+  { id: 'eo', char: 'ㅓ', romanization: 'eo' },
+  { id: 'yeo', char: 'ㅕ', romanization: 'yeo' },
+  { id: 'o', char: 'ㅗ', romanization: 'o' },
+  { id: 'yo', char: 'ㅛ', romanization: 'yo' },
+  { id: 'u', char: 'ㅜ', romanization: 'u' },
+  { id: 'yu', char: 'ㅠ', romanization: 'yu' },
+  { id: 'eu', char: 'ㅡ', romanization: 'eu' },
+  { id: 'i', char: 'ㅣ', romanization: 'i' },
+]
+
+export const KOREAN_LESSONS = [
+  {
+    id: 'greetings',
+    title: '打招呼',
+    emoji: '👋',
+    phrases: [
+      { id: 'g1', kr: '안녕하세요', ro: 'annyeonghaseyo', zh: '你好' },
+      { id: 'g2', kr: '안녕히 가세요', ro: 'annyeonghi gaseyo', zh: '再见（对离开的人说）' },
+      { id: 'g3', kr: '안녕히 계세요', ro: 'annyeonghi gyeseyo', zh: '再见（对留下的人说）' },
+      { id: 'g4', kr: '감사합니다', ro: 'gamsahamnida', zh: '谢谢' },
+      { id: 'g5', kr: '죄송합니다', ro: 'joesonghamnida', zh: '对不起' },
+      { id: 'g6', kr: '괜찮아요', ro: 'gwaenchanayo', zh: '没关系 / 还好' },
+      { id: 'g7', kr: '반갑습니다', ro: 'bangapseumnida', zh: '很高兴认识你' },
+      { id: 'g8', kr: '오랜만이에요', ro: 'oraenmanieyo', zh: '好久不见' },
+    ],
+  },
+  {
+    id: 'basics',
+    title: '基础用语',
+    emoji: '💬',
+    phrases: [
+      { id: 'b1', kr: '네', ro: 'ne', zh: '是 / 好的' },
+      { id: 'b2', kr: '아니요', ro: 'aniyo', zh: '不是' },
+      { id: 'b3', kr: '주세요', ro: 'juseyo', zh: '请给我…' },
+      { id: 'b4', kr: '이거 뭐예요?', ro: 'igeo mwoyeyo?', zh: '这是什么？' },
+      { id: 'b5', kr: '얼마예요?', ro: 'eolmayeyo?', zh: '多少钱？' },
+      { id: 'b6', kr: '몰라요', ro: 'mollayo', zh: '我不知道' },
+      { id: 'b7', kr: '알겠어요', ro: 'algesseoyo', zh: '我知道了 / 明白了' },
+      { id: 'b8', kr: '천천히 말해 주세요', ro: 'cheoncheonhi malhae juseyo', zh: '请说慢一点' },
+    ],
+  },
+  {
+    id: 'food',
+    title: '吃饭点餐',
+    emoji: '🍚',
+    phrases: [
+      { id: 'f1', kr: '맛있어요', ro: 'masisseoyo', zh: '好吃' },
+      { id: 'f2', kr: '배고파요', ro: 'baegopayo', zh: '肚子饿了' },
+      { id: 'f3', kr: '배불러요', ro: 'baebulleoyo', zh: '吃饱了' },
+      { id: 'f4', kr: '메뉴 좀 주세요', ro: 'menyu jom juseyo', zh: '请给我菜单' },
+      { id: 'f5', kr: '이거 하나 주세요', ro: 'igeo hana juseyo', zh: '请给我一份这个' },
+      { id: 'f6', kr: '계산해 주세요', ro: 'gyesanhae juseyo', zh: '请结账' },
+      { id: 'f7', kr: '물 좀 주세요', ro: 'mul jom juseyo', zh: '请给我水' },
+      { id: 'f8', kr: '맵지 않게 해주세요', ro: 'maepji anke haejuseyo', zh: '请不要做辣的' },
+    ],
+  },
+  {
+    id: 'numbers',
+    title: '数字',
+    emoji: '🔢',
+    phrases: [
+      { id: 'n1', kr: '하나', ro: 'hana', zh: '一（固有词）' },
+      { id: 'n2', kr: '둘', ro: 'dul', zh: '二（固有词）' },
+      { id: 'n3', kr: '셋', ro: 'set', zh: '三（固有词）' },
+      { id: 'n4', kr: '일', ro: 'il', zh: '一（汉字词）' },
+      { id: 'n5', kr: '이', ro: 'i', zh: '二（汉字词）' },
+      { id: 'n6', kr: '삼', ro: 'sam', zh: '三（汉字词）' },
+      { id: 'n7', kr: '십', ro: 'sip', zh: '十（汉字词）' },
+      { id: 'n8', kr: '백', ro: 'baek', zh: '一百（汉字词）' },
+    ],
+  },
+  {
+    id: 'travel',
+    title: '出行日常',
+    emoji: '🚕',
+    phrases: [
+      { id: 't1', kr: '여기가 어디예요?', ro: 'yeogiga eodiyeyo?', zh: '这里是哪里？' },
+      { id: 't2', kr: '화장실이 어디예요?', ro: 'hwajangsiri eodiyeyo?', zh: '洗手间在哪里？' },
+      { id: 't3', kr: '이 버스 강남 가요?', ro: 'i beoseu gangnam gayo?', zh: '这辆公交去江南吗？' },
+      { id: 't4', kr: '여기서 내려 주세요', ro: 'yeogiseo naeryeo juseyo', zh: '请让我在这里下车' },
+      { id: 't5', kr: '조심하세요', ro: 'josimhaseyo', zh: '请小心' },
+      { id: 't6', kr: '도와주세요', ro: 'dowajuseyo', zh: '请帮帮我' },
+      { id: 't7', kr: '길을 잃었어요', ro: 'gireul ireosseoyo', zh: '我迷路了' },
+      { id: 't8', kr: '얼마나 걸려요?', ro: 'eolmana geollyeoyo?', zh: '要花多久时间？' },
+    ],
+  },
+  {
+    id: 'emotion',
+    title: '表达情绪',
+    emoji: '🥰',
+    phrases: [
+      { id: 'e1', kr: '기뻐요', ro: 'gippeoyo', zh: '开心' },
+      { id: 'e2', kr: '슬퍼요', ro: 'seulpeoyo', zh: '难过' },
+      { id: 'e3', kr: '피곤해요', ro: 'pigonhaeyo', zh: '累了' },
+      { id: 'e4', kr: '재미있어요', ro: 'jaemiisseoyo', zh: '很有趣' },
+      { id: 'e5', kr: '보고 싶어요', ro: 'bogo sipeoyo', zh: '想你 / 想见' },
+      { id: 'e6', kr: '사랑해요', ro: 'saranghaeyo', zh: '我爱你' },
+      { id: 'e7', kr: '화이팅!', ro: 'hwaiting!', zh: '加油！' },
+      { id: 'e8', kr: '축하해요', ro: 'chukhahaeyo', zh: '恭喜' },
+    ],
+  },
+]
