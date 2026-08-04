@@ -4,7 +4,7 @@ import Header from './components/Header.jsx'
 import Finance from './modules/finance/Finance.jsx'
 import Todos from './modules/todos/Todos.jsx'
 import Workshop from './modules/workshop/Workshop.jsx'
-import Life from './modules/life/Life.jsx'
+import Korean from './modules/korean/Korean.jsx'
 import Watchlist from './modules/watchlist/Watchlist.jsx'
 import FoodMap from './modules/foodmap/FoodMap.jsx'
 import RandomPicker from './modules/randompicker/RandomPicker.jsx'
@@ -14,7 +14,7 @@ const MODULE_MAP = {
   finance: { title: '全能记账', emoji: '💰', Comp: Finance },
   todos: { title: '公私待办', emoji: '📋', Comp: Todos },
   workshop: { title: '店铺工作台', emoji: '🏭', Comp: Workshop },
-  life: { title: '生活记录', emoji: '🌿', Comp: Life },
+  korean: { title: '韩语学习', emoji: '🇰🇷', Comp: Korean },
   watchlist: { title: '追剧清单', emoji: '🎬', Comp: Watchlist },
   foodmap: { title: '美食地图', emoji: '📍', Comp: FoodMap },
   randompicker: { title: '随机点餐', emoji: '🎲', Comp: RandomPicker },
