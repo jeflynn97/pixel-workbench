@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, MapPin } from 'lucide-react'
+import { Plus, Trash2, MapPin, Pencil } from 'lucide-react'
 import { useLocalData } from '../../lib/useLocalData.js'
 import {
   Card, Button, Input, Select, SegmentedTabs, SectionTitle,
@@ -249,6 +249,22 @@ function RecordTab({
     setIncomeRecords(incomeRecords.filter((r) => r.id !== id))
   }
 
+  const [editingTx, setEditingTx] = useState(null)
+  const [editingIncome, setEditingIncome] = useState(null)
+
+  function saveTxEdit() {
+    if (!editingTx.amount || Number(editingTx.amount) <= 0) return showToast('请输入有效金额')
+    setTransactions(transactions.map((t) => (t.id === editingTx.id ? { ...editingTx, amount: Number(editingTx.amount) } : t)))
+    setEditingTx(null)
+    showToast('已更新 ✅')
+  }
+  function saveIncomeEdit() {
+    if (!editingIncome.amount || Number(editingIncome.amount) <= 0) return showToast('请输入有效金额')
+    setIncomeRecords(incomeRecords.map((r) => (r.id === editingIncome.id ? { ...editingIncome, amount: Number(editingIncome.amount) } : r)))
+    setEditingIncome(null)
+    showToast('已更新 ✅')
+  }
+
   return (
     <div className="space-y-3 pb-6">
       <div className="flex gap-2">
@@ -328,6 +344,7 @@ function RecordTab({
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="font-display">{formatCurrency(t.amount, t.currency || 'RM')}</span>
+              <button onClick={() => setEditingTx({ ...t, amount: String(t.amount) })} className="text-stone2-darker"><Pencil size={15} /></button>
               <button onClick={() => removeTx(t.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
           </Card>
@@ -340,6 +357,7 @@ function RecordTab({
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="font-display">{formatCurrency(r.amount, 'RM')}</span>
+              <button onClick={() => setEditingIncome({ ...r, amount: String(r.amount) })} className="text-stone2-darker"><Pencil size={15} /></button>
               <button onClick={() => removeIncome(r.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
           </Card>
@@ -348,6 +366,64 @@ function RecordTab({
           <EmptyState emoji="🧾" text="还没有记录" />
         )}
       </div>
+
+      <Modal open={!!editingTx} onClose={() => setEditingTx(null)} title="编辑这笔支出"
+        footer={<Button className="w-full" onClick={saveTxEdit}>保存修改</Button>}>
+        {editingTx && (
+          <div className="space-y-2.5">
+            <Input label="日期" type="date" value={editingTx.date} onChange={(e) => setEditingTx({ ...editingTx, date: e.target.value })} />
+            <Select label="消费类目" value={editingTx.category} onChange={(e) => setEditingTx({ ...editingTx, category: e.target.value })}>
+              {expenseCategories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </Select>
+            {editingTx.category === '游玩费用' && (
+              <Input label="游玩地点" value={editingTx.place || ''} onChange={(e) => setEditingTx({ ...editingTx, place: e.target.value })} />
+            )}
+            <div>
+              <span className="block text-xs text-stone2-darker mb-1 font-display">币种</span>
+              <div className="flex gap-2">
+                {CURRENCIES.map((c) => (
+                  <Tag key={c.id} active={(editingTx.currency || 'RM') === c.id} onClick={() => setEditingTx({ ...editingTx, currency: c.id })} color="mint">
+                    {c.label}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span className="block text-xs text-stone2-darker mb-1 font-display">支付方式</span>
+              <div className="flex gap-2">
+                {PAY_METHODS.map((p) => (
+                  <Tag key={p.id} active={editingTx.payMethod === p.id} onClick={() => setEditingTx({ ...editingTx, payMethod: p.id })}>
+                    {p.label}
+                  </Tag>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span className="block text-xs text-stone2-darker mb-1 font-display">消费属性</span>
+              <div className="flex gap-2">
+                <Tag active={!editingTx.isPublic} onClick={() => setEditingTx({ ...editingTx, isPublic: false })}>个人消费</Tag>
+                <Tag active={editingTx.isPublic} onClick={() => setEditingTx({ ...editingTx, isPublic: true })} color="butter">公司采购</Tag>
+              </div>
+            </div>
+            <Input label="金额" type="number" inputMode="decimal" value={editingTx.amount} onChange={(e) => setEditingTx({ ...editingTx, amount: e.target.value })} />
+            <Input label="备注" value={editingTx.note || ''} onChange={(e) => setEditingTx({ ...editingTx, note: e.target.value })} />
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!editingIncome} onClose={() => setEditingIncome(null)} title="编辑这笔收入"
+        footer={<Button variant="mint" className="w-full" onClick={saveIncomeEdit}>保存修改</Button>}>
+        {editingIncome && (
+          <div className="space-y-2.5">
+            <Input label="日期" type="date" value={editingIncome.date} onChange={(e) => setEditingIncome({ ...editingIncome, date: e.target.value })} />
+            <Select label="收入类目" value={editingIncome.category} onChange={(e) => setEditingIncome({ ...editingIncome, category: e.target.value })}>
+              {incomeCategories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </Select>
+            <Input label="金额" type="number" inputMode="decimal" value={editingIncome.amount} onChange={(e) => setEditingIncome({ ...editingIncome, amount: e.target.value })} />
+            <Input label="备注" value={editingIncome.note || ''} onChange={(e) => setEditingIncome({ ...editingIncome, note: e.target.value })} />
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
