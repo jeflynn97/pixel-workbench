@@ -1,10 +1,50 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, Briefcase, User } from 'lucide-react'
+import { Plus, Trash2, Briefcase, User, Pencil, Check, X } from 'lucide-react'
 import { useLocalData } from '../../lib/useLocalData.js'
 import { Card, Button, Input, EmptyState, SectionTitle } from '../../components/ui.jsx'
 import { genId } from '../../lib/utils.js'
 
-function TodoSection({ title, icon: Icon, list, onAdd, onToggle, onRemove, color }) {
+function TodoRow({ todo, onToggle, onRemove, onEdit, muted = false }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(todo.text)
+
+  function save() {
+    if (!draft.trim()) return
+    onEdit(todo.id, draft.trim())
+    setEditing(false)
+  }
+  function cancel() {
+    setDraft(todo.text)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-2 bg-white pixel-corners-sm border-2 border-ink px-2 py-1.5">
+        <Input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && save()}
+          className="flex-1 !py-1"
+          autoFocus
+        />
+        <button onClick={save} className="text-mint-dark shrink-0"><Check size={18} /></button>
+        <button onClick={cancel} className="text-stone2-darker shrink-0"><X size={18} /></button>
+      </div>
+    )
+  }
+
+  return (
+    <label className={`flex items-center gap-2 pixel-corners-sm border-2 px-3 py-2 ${muted ? 'bg-white/60 border-stone2' : 'bg-white border-ink'}`}>
+      <input type="checkbox" checked={todo.done} onChange={() => onToggle(todo.id)} className="w-4 h-4 accent-pink-dark" />
+      <span className={`flex-1 text-sm ${muted ? 'line-through text-stone2-darker' : ''}`}>{todo.text}</span>
+      <button onClick={(e) => { e.preventDefault(); setEditing(true) }} className="text-stone2-darker"><Pencil size={15} /></button>
+      <button onClick={(e) => { e.preventDefault(); onRemove(todo.id) }} className="text-stone2-darker"><Trash2 size={15} /></button>
+    </label>
+  )
+}
+
+function TodoSection({ title, icon: Icon, list, onAdd, onToggle, onRemove, onEdit, color }) {
   const [text, setText] = useState('')
   const pending = list.filter((t) => !t.done)
   const done = list.filter((t) => t.done)
@@ -35,22 +75,14 @@ function TodoSection({ title, icon: Icon, list, onAdd, onToggle, onRemove, color
 
       <div className="space-y-1.5">
         {pending.map((t) => (
-          <label key={t.id} className="flex items-center gap-2 bg-white pixel-corners-sm border-2 border-ink px-3 py-2">
-            <input type="checkbox" checked={false} onChange={() => onToggle(t.id)} className="w-4 h-4 accent-pink-dark" />
-            <span className="flex-1 text-sm">{t.text}</span>
-            <button onClick={() => onRemove(t.id)} className="text-stone2-darker"><Trash2 size={15} /></button>
-          </label>
+          <TodoRow key={t.id} todo={t} onToggle={onToggle} onRemove={onRemove} onEdit={onEdit} />
         ))}
         {done.length > 0 && (
           <details className="mt-2">
             <summary className="text-xs text-stone2-darker font-display cursor-pointer">已完成 {done.length} 项</summary>
             <div className="space-y-1.5 mt-1.5">
               {done.map((t) => (
-                <label key={t.id} className="flex items-center gap-2 bg-white/60 pixel-corners-sm border-2 border-stone2 px-3 py-2">
-                  <input type="checkbox" checked readOnly onChange={() => onToggle(t.id)} className="w-4 h-4 accent-pink-dark" />
-                  <span className="flex-1 text-sm line-through text-stone2-darker">{t.text}</span>
-                  <button onClick={() => onRemove(t.id)} className="text-stone2-darker"><Trash2 size={15} /></button>
-                </label>
+                <TodoRow key={t.id} todo={t} onToggle={onToggle} onRemove={onRemove} onEdit={onEdit} muted />
               ))}
             </div>
           </details>
@@ -75,6 +107,9 @@ export default function Todos() {
   function remove(id) {
     setTodos(todos.filter((t) => t.id !== id))
   }
+  function edit(id, newText) {
+    setTodos(todos.map((t) => (t.id === id ? { ...t, text: newText } : t)))
+  }
 
   return (
     <div className="px-4 pt-3 space-y-3 pb-6">
@@ -84,6 +119,7 @@ export default function Todos() {
         onAdd={(text) => addTodo('work', text)}
         onToggle={toggle}
         onRemove={remove}
+        onEdit={edit}
       />
       <TodoSection
         title="私人待办" icon={User} color="bg-pink-light"
@@ -91,6 +127,7 @@ export default function Todos() {
         onAdd={(text) => addTodo('personal', text)}
         onToggle={toggle}
         onRemove={remove}
+        onEdit={edit}
       />
     </div>
   )
