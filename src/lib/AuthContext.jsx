@@ -20,12 +20,14 @@ export function AuthProvider({ children }) {
     return () => listener?.subscription?.unsubscribe()
   }, [])
 
-  async function signInWithOtp(email) {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin },
-    })
-    return { error }
+  async function signUp(email, password) {
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    return { data, error }
+  }
+
+  async function signInWithPassword(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    return { data, error }
   }
 
   async function signOut() {
@@ -33,7 +35,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithOtp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signInWithPassword, signOut }}>
       {children}
     </AuthContext.Provider>
   )
