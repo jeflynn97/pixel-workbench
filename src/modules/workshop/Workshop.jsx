@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, Minus, Snowflake, CheckCircle2, Circle, Pencil } from 'lucide-react'
+import { Plus, Trash2, Minus, Snowflake, CheckCircle2, Circle, Pencil, ChevronUp, ChevronDown } from 'lucide-react'
 import { useLocalData } from '../../lib/useLocalData.js'
 import {
   Card, Button, Input, SegmentedTabs, SectionTitle, EmptyState, Tag, Modal,
@@ -94,10 +94,10 @@ function ShoppingTab() {
   function toggleDone(id) {
     setList(list.map((i) => (i.id === id ? { ...i, done: !i.done } : i)))
   }
-  function addPrice(id, store, price) {
+  function addPrice(id, store, price, unit) {
     if (!store || !price) return
     setList(list.map((i) => (i.id === id
-      ? { ...i, prices: [{ id: genId(), store, price: Number(price), date: todayStr() }, ...i.prices] }
+      ? { ...i, prices: [{ id: genId(), store, price: Number(price), unit: unit || '', date: todayStr() }, ...i.prices] }
       : i)))
   }
   function removePrice(itemId, priceId) {
@@ -122,10 +122,21 @@ function ShoppingTab() {
   )
 }
 
+const UNIT_PRESETS_SHOPPING = ['/kg', '粒', '包', '根', '打', '个', '箱']
+
 function ShoppingItem({ item, onRemove, onToggleDone, onAddPrice, onRemovePrice }) {
   const [store, setStore] = useState('')
   const [price, setPrice] = useState('')
-  const cheapest = item.prices.length > 0 ? Math.min(...item.prices.map((p) => p.price)) : null
+  const [unit, setUnit] = useState('')
+
+  // 按单位分组比价：不同单位（比如 /kg 和 5粒）之间不直接比较，只在同单位内找最低价
+  const cheapestByUnit = {}
+  item.prices.forEach((p) => {
+    const key = p.unit || '（未填单位）'
+    if (cheapestByUnit[key] === undefined || p.price < cheapestByUnit[key]) {
+      cheapestByUnit[key] = p.price
+    }
+  })
 
   return (
     <Card>
@@ -136,22 +147,34 @@ function ShoppingItem({ item, onRemove, onToggleDone, onAddPrice, onRemovePrice 
         </label>
         <button onClick={() => onRemove(item.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
       </div>
-      <div className="flex gap-2 mb-2">
+      <div className="flex gap-2 mb-1.5">
         <Input placeholder="商家" value={store} onChange={(e) => setStore(e.target.value)} className="flex-1" />
         <Input placeholder="单价" type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="w-20" />
-        <Button size="sm" onClick={() => { onAddPrice(item.id, store, price); setStore(''); setPrice('') }}>记录</Button>
+      </div>
+      <div className="flex gap-2 mb-2">
+        <Input placeholder="单位，例如 /kg、5粒" value={unit} onChange={(e) => setUnit(e.target.value)} className="flex-1" />
+        <Button size="sm" onClick={() => { onAddPrice(item.id, store, price, unit); setStore(''); setPrice(''); setUnit('') }}>记录</Button>
+      </div>
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {UNIT_PRESETS_SHOPPING.map((u) => (
+          <Tag key={u} active={unit === u} onClick={() => setUnit(u)} color="mint">{u}</Tag>
+        ))}
       </div>
       {item.prices.length > 0 && (
         <div className="space-y-1">
-          {item.prices.map((p) => (
-            <div key={p.id} className={`flex justify-between text-xs px-2 py-1 pixel-corners-sm ${p.price === cheapest ? 'bg-mint' : 'bg-cream'}`}>
-              <span>{p.store}{p.price === cheapest && ' · 最低价'}</span>
-              <span className="flex items-center gap-2">
-                RM {formatMoney(p.price)}
-                <button onClick={() => onRemovePrice(item.id, p.id)} className="text-stone2-darker"><Trash2 size={12} /></button>
-              </span>
-            </div>
-          ))}
+          {item.prices.map((p) => {
+            const key = p.unit || '（未填单位）'
+            const isCheapest = p.price === cheapestByUnit[key]
+            return (
+              <div key={p.id} className={`flex justify-between text-xs px-2 py-1 pixel-corners-sm ${isCheapest ? 'bg-mint' : 'bg-cream'}`}>
+                <span>{p.store}{p.unit ? ` · ${p.unit}` : ''}{isCheapest && ' · 该单位最低价'}</span>
+                <span className="flex items-center gap-2">
+                  RM {formatMoney(p.price)}
+                  <button onClick={() => onRemovePrice(item.id, p.id)} className="text-stone2-darker"><Trash2 size={12} /></button>
+                </span>
+              </div>
+            )
+          })}
         </div>
       )}
     </Card>
@@ -214,8 +237,21 @@ function TasksTab() {
   const [form, setForm] = useState({ snackName: '', quantity: '', unit: '个' })
   const [editing, setEditing] = useState(null)
 
-  const pending = tasks.filter((t) => t.status === 'pending').sort((a, b) => b.createdAt - a.createdAt)
+  const pending = tasks.filter((t) => t.status === 'pending').sort((a, b) => a.createdAt - b.createdAt)
   const done = tasks.filter((t) => t.status === 'done').sort((a, b) => b.createdAt - a.createdAt)
+
+  function moveTask(id, direction) {
+    const idx = pending.findIndex((t) => t.id === id)
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= pending.length) return
+    const a = pending[idx]
+    const b = pending[swapIdx]
+    setTasks(tasks.map((t) => {
+      if (t.id === a.id) return { ...t, createdAt: b.createdAt }
+      if (t.id === b.id) return { ...t, createdAt: a.createdAt }
+      return t
+    }))
+  }
 
   function addTask() {
     if (!form.snackName.trim() || !form.quantity) return
@@ -275,9 +311,10 @@ function TasksTab() {
       </Card>
 
       <SectionTitle right={<span className="text-xs font-display">{pending.length} 项待制作</span>}>待制作任务</SectionTitle>
+      <p className="text-[11px] text-stone2-darker -mt-2">用右侧箭头调整制作顺序，从上到下就是制作先后</p>
       {pending.length === 0 && <EmptyState emoji="🍪" text="暂无待制作任务，生产已清空" />}
       <div className="space-y-2">
-        {pending.map((t) => (
+        {pending.map((t, idx) => (
           <Card key={t.id} className="flex items-center justify-between py-2.5 bg-butter">
             <button onClick={() => toggleStatus(t.id)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
               <Circle size={20} />
@@ -286,8 +323,12 @@ function TasksTab() {
                 <p className="text-xs text-stone2-darker">{t.quantity}{t.unit} · {formatDateLabel(new Date(t.createdAt).toISOString())}</p>
               </span>
             </button>
-            <div className="flex items-center gap-2 shrink-0">
-              <button onClick={() => setEditing({ ...t })} className="text-stone2-darker"><Pencil size={16} /></button>
+            <div className="flex items-center gap-1 shrink-0">
+              <div className="flex flex-col">
+                <button onClick={() => moveTask(t.id, 'up')} disabled={idx === 0} className="text-stone2-darker disabled:opacity-20"><ChevronUp size={15} /></button>
+                <button onClick={() => moveTask(t.id, 'down')} disabled={idx === pending.length - 1} className="text-stone2-darker disabled:opacity-20"><ChevronDown size={15} /></button>
+              </div>
+              <button onClick={() => setEditing({ ...t })} className="text-stone2-darker ml-1"><Pencil size={16} /></button>
               <button onClick={() => remove(t.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
           </Card>
