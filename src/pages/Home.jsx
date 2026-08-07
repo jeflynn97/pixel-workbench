@@ -8,8 +8,7 @@ import { useLocalData } from '../lib/useLocalData.js'
 import { computeCreditCard, computeTotalAssets, computeMonthSummary } from '../lib/financeCalc.js'
 import { exportAllData, importAllData } from '../lib/storage.js'
 import { genId, todayStr } from '../lib/utils.js'
-import { DEFAULT_EXPENSE_CATEGORIES, CURRENCIES } from '../lib/seed.js'
-import AccountSync from '../components/AccountSync.jsx'
+import { DEFAULT_EXPENSE_CATEGORIES, CURRENCIES, PAY_METHODS } from '../lib/seed.js'
 
 const MODULES = [
   { key: 'finance', name: '全能记账', desc: '收支·资产·信用卡', icon: Wallet, color: 'bg-pink' },
@@ -101,8 +100,6 @@ export default function Home({ onNavigate }) {
         )}
       </Card>
 
-      <AccountSync />
-
       <QuickActions showToast={showToast} />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -145,6 +142,7 @@ function QuickActions({ showToast }) {
     category: expenseCategories[0]?.name || '吃饭',
     amount: '',
     currency: 'RM',
+    payMethod: 'cash',
   })
 
   function addTodo() {
@@ -159,7 +157,7 @@ function QuickActions({ showToast }) {
     setTransactions([{
       id: genId(),
       date: todayStr(),
-      payMethod: 'cash',
+      payMethod: expForm.payMethod,
       isPublic: false,
       currency: expForm.currency,
       category: expForm.category,
@@ -206,6 +204,13 @@ function QuickActions({ showToast }) {
             ))}
           </div>
           <div className="flex gap-2">
+            {PAY_METHODS.map((p) => (
+              <Tag key={p.id} active={expForm.payMethod === p.id} onClick={() => setExpForm({ ...expForm, payMethod: p.id })}>
+                {p.label}
+              </Tag>
+            ))}
+          </div>
+          <div className="flex gap-2">
             <Select value={expForm.category} onChange={(e) => setExpForm({ ...expForm, category: e.target.value })} className="flex-1">
               {expenseCategories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
             </Select>
@@ -217,7 +222,7 @@ function QuickActions({ showToast }) {
             />
             <Button onClick={addExpense}><Plus size={16} /></Button>
           </div>
-          <p className="text-[11px] text-stone2-darker">默认现金·个人消费·今天，其他细节可在「全能记账」里补充</p>
+          <p className="text-[11px] text-stone2-darker">默认个人消费·今天，其他细节可在「全能记账」里补充</p>
         </div>
       )}
     </Card>
