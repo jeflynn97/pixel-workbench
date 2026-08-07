@@ -1,14 +1,15 @@
 import React, { useState } from 'react'
-import { Flame, Check, RotateCw } from 'lucide-react'
+import { Flame, Check, RotateCw, ExternalLink } from 'lucide-react'
 import { useLocalData } from '../../lib/useLocalData.js'
 import { Card, SegmentedTabs, SectionTitle, EmptyState, Button } from '../../components/ui.jsx'
 import { todayStr, formatDateLabel } from '../../lib/utils.js'
-import { HANGUL_CONSONANTS, HANGUL_VOWELS, KOREAN_LESSONS } from '../../lib/koreanContent.js'
+import { HANGUL_CONSONANTS, HANGUL_VOWELS, KOREAN_LESSONS, KOREAN_RESOURCES } from '../../lib/koreanContent.js'
 
 const TABS = [
   { value: 'checkin', label: '打卡' },
   { value: 'hangul', label: '韩文字母' },
   { value: 'phrases', label: '常用短语' },
+  { value: 'resources', label: '学习资源' },
 ]
 
 function computeStreak(checkins) {
@@ -40,6 +41,7 @@ export default function Korean() {
         {tab === 'checkin' && <CheckinTab />}
         {tab === 'hangul' && <HangulTab />}
         {tab === 'phrases' && <PhrasesTab />}
+        {tab === 'resources' && <ResourcesTab />}
       </div>
     </div>
   )
@@ -186,5 +188,29 @@ function PhraseCard({ phrase }) {
         </div>
       </div>
     </Card>
+  )
+}
+
+function ResourcesTab() {
+  return (
+    <div className="space-y-3 pb-6">
+      <p className="text-xs text-stone2-darker">
+        这些是外部网站，点开会在新标签页打开，可以配合上面的短语和字母，找视频、播客跟着练发音和听力。
+      </p>
+      {KOREAN_RESOURCES.map((r) => (
+        <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer">
+          <Card className="flex items-start gap-3 hover:bg-cream-light">
+            <span className="text-2xl shrink-0">{r.emoji}</span>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-sm flex items-center gap-1">
+                {r.title}
+                <ExternalLink size={13} className="text-stone2-darker" />
+              </p>
+              <p className="text-xs text-stone2-darker mt-0.5">{r.desc}</p>
+            </div>
+          </Card>
+        </a>
+      ))}
+    </div>
   )
 }
