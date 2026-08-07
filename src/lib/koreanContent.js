@@ -1,4 +1,3 @@
-
 // 韩语学习模块的静态内容库：字母表 + 分类常用短语
 // 之后想扩充内容，直接在这里加数据即可，不用改组件逻辑
 
@@ -122,5 +121,81 @@ export const KOREAN_LESSONS = [
       { id: 'e7', kr: '화이팅!', ro: 'hwaiting!', zh: '加油！' },
       { id: 'e8', kr: '축하해요', ro: 'chukhahaeyo', zh: '恭喜' },
     ],
+  },
+  {
+    id: 'shopping',
+    title: '购物',
+    emoji: '🛍️',
+    phrases: [
+      { id: 's1', kr: '이거 얼마예요?', ro: 'igeo eolmayeyo?', zh: '这个多少钱？' },
+      { id: 's2', kr: '너무 비싸요', ro: 'neomu bissayo', zh: '太贵了' },
+      { id: 's3', kr: '깎아 주세요', ro: 'kkakka juseyo', zh: '请便宜一点' },
+      { id: 's4', kr: '이거 주세요', ro: 'igeo juseyo', zh: '请给我这个' },
+      { id: 's5', kr: '다른 색 있어요?', ro: 'dareun saek isseoyo?', zh: '有别的颜色吗？' },
+      { id: 's6', kr: '입어봐도 돼요?', ro: 'ibeobwado dwaeyo?', zh: '可以试穿吗？' },
+      { id: 's7', kr: '카드 돼요?', ro: 'kadeu dwaeyo?', zh: '可以刷卡吗？' },
+      { id: 's8', kr: '영수증 주세요', ro: 'yeongsujeung juseyo', zh: '请给我收据' },
+    ],
+  },
+  {
+    id: 'work',
+    title: '职场沟通',
+    emoji: '💼',
+    phrases: [
+      { id: 'w1', kr: '거래처', ro: 'georaecheo', zh: '合作商 / 客户' },
+      { id: 'w2', kr: '주문하고 싶어요', ro: 'jumunhago sipeoyo', zh: '我想下单' },
+      { id: 'w3', kr: '가격표를 보내 주세요', ro: 'gagyeokpyoreul bonae juseyo', zh: '请发价格表给我' },
+      { id: 'w4', kr: '재고가 있어요?', ro: 'jaegoga isseoyo?', zh: '有库存吗？' },
+      { id: 'w5', kr: '언제 배송돼요?', ro: 'eonje baesongdwaeyo?', zh: '什么时候发货？' },
+      { id: 'w6', kr: '샘플을 받고 싶어요', ro: 'saempeureul batgo sipeoyo', zh: '我想要样品' },
+      { id: 'w7', kr: '연락 주세요', ro: 'yeollak juseyo', zh: '请联系我' },
+      { id: 'w8', kr: '수고하셨습니다', ro: 'sugohasyeotseumnida', zh: '辛苦了' },
+    ],
+  },
+]
+
+// 外部学习资源：跳转到网页做延伸练习（听力/跟读/系统课程）
+export const KOREAN_RESOURCES = [
+  {
+    id: 'r1',
+    title: 'HowToStudyKorean',
+    desc: '免费系统语法课程，从零基础到进阶，英文讲解但条理清晰',
+    url: 'https://www.howtostudykorean.com/',
+    emoji: '📘',
+  },
+  {
+    id: 'r2',
+    title: 'Duolingo 韩语课程',
+    desc: '游戏化练习，适合每天花几分钟巩固单词和句型',
+    url: 'https://www.duolingo.com/course/ko/en/Learn-Korean',
+    emoji: '🦉',
+  },
+  {
+    id: 'r3',
+    title: 'Talk To Me In Korean',
+    desc: '口语和听力为主的课程与播客，适合练发音和跟读',
+    url: 'https://talktomeinkorean.com/',
+    emoji: '🎧',
+  },
+  {
+    id: 'r4',
+    title: 'Naver 韩中词典',
+    desc: '查单词、看例句、听发音，随时查生词很方便',
+    url: 'https://dict.naver.com/koko/',
+    emoji: '📖',
+  },
+  {
+    id: 'r5',
+    title: '90 Day Korean',
+    desc: '短文章 + 实用短语，偏日常生活和旅游场景',
+    url: 'https://www.90daykorean.com/',
+    emoji: '🗓️',
+  },
+  {
+    id: 'r6',
+    title: 'YouTube 跟读练习',
+    desc: '搜索 "Korean shadowing practice" 找跟读视频，边听边跟着说',
+    url: 'https://www.youtube.com/results?search_query=korean+shadowing+practice+beginner',
+    emoji: '📺',
   },
 ]
