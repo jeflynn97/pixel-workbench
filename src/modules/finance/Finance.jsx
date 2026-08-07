@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, MapPin, Pencil } from 'lucide-react'
+import { Plus, Trash2, MapPin, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLocalData } from '../../lib/useLocalData.js'
 import {
   Card, Button, Input, Select, SegmentedTabs, SectionTitle,
@@ -14,6 +14,7 @@ import {
 
 const TABS = [
   { value: 'overview', label: '总览' },
+  { value: 'calendar', label: '日历' },
   { value: 'record', label: '记一笔' },
   { value: 'fixed', label: '固定支出' },
   { value: 'categories', label: '类目管理' },
@@ -61,6 +62,7 @@ export default function Finance() {
             sgdCategoryBreakdown={sgdCategoryBreakdown}
           />
         )}
+        {tab === 'calendar' && <CalendarTab transactions={transactions} />}
         {tab === 'record' && (
           <RecordTab
             transactions={transactions}
@@ -213,6 +215,109 @@ function Overview({ monthSummary, totalAssets, credit, categoryBreakdown, placeB
     </div>
   )
 }
+
+
+function CalendarTab({ transactions }) {
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date()
+    d.setDate(1)
+    return d
+  })
+  const [selectedDate, setSelectedDate] = useState(null)
+
+  const year = cursor.getFullYear()
+  const month = cursor.getMonth()
+  const firstDay = new Date(year, month, 1)
+  const startWeekday = firstDay.getDay() // 0=周日
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+  // 按日期汇总当月每天的花费（RM，含个人+对公）
+  const dailyTotals = {}
+  const dailySgd = {}
+  transactions.forEach((t) => {
+    const d = new Date(t.date)
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const dayKey = d.getDate()
+      const currency = t.currency || 'RM'
+      if (currency === 'RM') {
+        dailyTotals[dayKey] = (dailyTotals[dayKey] || 0) + Number(t.amount || 0)
+      } else {
+        dailySgd[dayKey] = (dailySgd[dayKey] || 0) + Number(t.amount || 0)
+      }
+    }
+  })
+
+  const monthTotal = Object.values(dailyTotals).reduce((s, v) => s + v, 0)
+
+  function changeMonth(delta) {
+    const d = new Date(cursor)
+    d.setMonth(d.getMonth() + delta)
+    setCursor(d)
+    setSelectedDate(null)
+  }
+
+  const cells = []
+  for (let i = 0; i < startWeekday; i++) cells.push(null)
+  for (let day = 1; day <= daysInMonth; day++) cells.push(day)
+
+  const selectedDayStr = selectedDate
+    ? `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`
+    : null
+  const selectedTx = selectedDayStr
+    ? transactions.filter((t) => t.date === selectedDayStr)
+    : []
+
+  return (
+    <div className="space-y-3 pb-6">
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => changeMonth(-1)} className="pixel-corners-sm border-2 border-ink bg-white p-1.5"><ChevronLeft size={16} /></button>
+          <p className="font-display text-base">{year} 年 {month + 1} 月</p>
+          <button onClick={() => changeMonth(1)} className="pixel-corners-sm border-2 border-ink bg-white p-1.5"><ChevronRight size={16} /></button>
+        </div>
+        <p className="text-xs text-stone2-darker text-center mb-2">本月总花费（RM）{formatCurrency(monthTotal, 'RM')}</p>
+        <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-stone2-darker mb-1">
+          {['日', '一', '二', '三', '四', '五', '六'].map((w) => <div key={w}>{w}</div>)}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {cells.map((day, i) => {
+            if (day === null) return <div key={`empty-${i}`} />
+            const total = dailyTotals[day]
+            const sgd = dailySgd[day]
+            const active = selectedDate === day
+            return (
+              <button
+                key={day}
+                onClick={() => setSelectedDate(active ? null : day)}
+                className={`pixel-corners-sm border-2 border-ink px-0.5 py-1 text-center ${active ? 'bg-pink' : total ? 'bg-pink-light' : 'bg-white'}`}
+              >
+                <p className="text-xs font-display">{day}</p>
+                {total ? <p className="text-[9px] leading-tight">{Math.round(total)}</p> : null}
+                {sgd ? <p className="text-[8px] leading-tight text-mint-dark">SGD</p> : null}
+              </button>
+            )
+          })}
+        </div>
+      </Card>
+
+      {selectedDate && (
+        <Card>
+          <SectionTitle>{month + 1} 月 {selectedDate} 日的消费</SectionTitle>
+          {selectedTx.length === 0 && <EmptyState emoji="🗓️" text="这天没有消费记录" />}
+          <div className="space-y-2">
+            {selectedTx.map((t) => (
+              <div key={t.id} className="flex justify-between text-sm">
+                <span>{t.category}{t.place ? ` · ${t.place}` : ''}{t.isPublic ? ' · 对公' : ''}</span>
+                <span className="font-display">{formatCurrency(t.amount, t.currency || 'RM')}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
 
 function RecordTab({
   transactions, setTransactions, incomeRecords, setIncomeRecords,
