@@ -18,6 +18,7 @@ export const ALL_KEYS = [
   // 库存
   'inventory_ingredients',
   'inventory_shoppingList',
+  'inventory_priceBook',
   'inventory_frozen',
   // 生活记录
   'life_logs',
