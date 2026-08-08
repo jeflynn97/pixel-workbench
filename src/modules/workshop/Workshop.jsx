@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Plus, Trash2, Minus, Snowflake, CheckCircle2, Circle, Pencil, ChevronUp, ChevronDown } from 'lucide-react'
 import { useLocalData } from '../../lib/useLocalData.js'
 import {
@@ -80,51 +80,171 @@ function IngredientsTab() {
 }
 
 function ShoppingTab() {
-  const [list, setList] = useLocalData('inventory_shoppingList', [])
-  const [name, setName] = useState('')
+  const [buyList, setBuyList] = useLocalData('inventory_shoppingList', [])
+  const [priceBook, setPriceBook] = useLocalData('inventory_priceBook', [])
+  const [migrated, setMigrated] = useState(false)
+  const [subTab, setSubTab] = useState('buy')
 
-  function addItem() {
-    if (!name.trim()) return
-    setList([{ id: genId(), name: name.trim(), done: false, prices: [] }, ...list])
-    setName('')
-  }
-  function remove(id) {
-    setList(list.filter((i) => i.id !== id))
-  }
-  function toggleDone(id) {
-    setList(list.map((i) => (i.id === id ? { ...i, done: !i.done } : i)))
-  }
-  function addPrice(id, store, price, unit) {
-    if (!store || !price) return
-    setList(list.map((i) => (i.id === id
-      ? { ...i, prices: [{ id: genId(), store, price: Number(price), unit: unit || '', date: todayStr() }, ...i.prices] }
-      : i)))
-  }
-  function removePrice(itemId, priceId) {
-    setList(list.map((i) => (i.id === itemId ? { ...i, prices: i.prices.filter((p) => p.id !== priceId) } : i)))
-  }
+  // 一次性数据迁移：把旧版"采购清单"里绑定在每个物品上的价格记录，搬到独立的比价记录本
+  // 这样以后清空/删除采购清单里的物品，不会再连带把价格记录也删掉
+  useEffect(() => {
+    if (migrated) return
+    const hasOldPrices = buyList.some((i) => Array.isArray(i.prices) && i.prices.length > 0)
+    if (hasOldPrices && priceBook.length === 0) {
+      const newPriceBook = []
+      buyList.forEach((item) => {
+        if (item.prices && item.prices.length > 0) {
+          newPriceBook.push({ id: genId(), name: item.name, prices: item.prices })
+        }
+      })
+      setPriceBook(newPriceBook)
+      setBuyList(buyList.map(({ prices, ...rest }) => rest))
+    }
+    setMigrated(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="space-y-3 pb-6">
+      <SegmentedTabs
+        tabs={[{ value: 'buy', label: '本次要买' }, { value: 'pricebook', label: '比价记录本' }]}
+        value={subTab}
+        onChange={setSubTab}
+      />
+      {subTab === 'buy' ? (
+        <BuyListSection buyList={buyList} setBuyList={setBuyList} priceBook={priceBook} setPriceBook={setPriceBook} />
+      ) : (
+        <PriceBookSection priceBook={priceBook} setPriceBook={setPriceBook} />
+      )}
+    </div>
+  )
+}
+
+function BuyListSection({ buyList, setBuyList, priceBook, setPriceBook }) {
+  const [name, setName] = useState('')
+  const pending = buyList.filter((i) => !i.done)
+  const done = buyList.filter((i) => i.done)
+
+  function addItem(itemName) {
+    const finalName = (itemName ?? name).trim()
+    if (!finalName) return
+    setBuyList([{ id: genId(), name: finalName, done: false }, ...buyList])
+    if (!itemName) setName('')
+  }
+  function remove(id) {
+    setBuyList(buyList.filter((i) => i.id !== id))
+  }
+  function toggleDone(id) {
+    setBuyList(buyList.map((i) => (i.id === id ? { ...i, done: !i.done } : i)))
+  }
+  function clearDone() {
+    setBuyList(buyList.filter((i) => !i.done))
+  }
+
+  return (
+    <div className="space-y-3">
       <Card>
         <div className="flex gap-2">
-          <Input placeholder="需要采购的物品" value={name} onChange={(e) => setName(e.target.value)} className="flex-1" />
-          <Button onClick={addItem}><Plus size={16} /></Button>
+          <Input
+            placeholder="需要采购的物品"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && addItem()}
+            className="flex-1"
+          />
+          <Button onClick={() => addItem()}><Plus size={16} /></Button>
         </div>
+        {priceBook.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            <span className="text-[11px] text-stone2-darker w-full">从比价记录本快速添加：</span>
+            {priceBook.map((p) => (
+              <Tag key={p.id} onClick={() => addItem(p.name)} color="mint">{p.name}</Tag>
+            ))}
+          </div>
+        )}
       </Card>
-      {list.length === 0 && <EmptyState emoji="🛒" text="采购清单是空的" />}
-      <div className="space-y-3">
-        {list.map((item) => (
-          <ShoppingItem key={item.id} item={item} onRemove={remove} onToggleDone={toggleDone} onAddPrice={addPrice} onRemovePrice={removePrice} />
+
+      {buyList.length === 0 && <EmptyState emoji="🛒" text="采购清单是空的" />}
+
+      <div className="space-y-2">
+        {pending.map((item) => (
+          <Card key={item.id} className="flex items-center justify-between py-2.5">
+            <label className="flex items-center gap-2 flex-1 min-w-0">
+              <input type="checkbox" checked={item.done} onChange={() => toggleDone(item.id)} className="w-4 h-4 accent-pink-dark" />
+              <span className="font-display">{item.name}</span>
+            </label>
+            <button onClick={() => remove(item.id)} className="text-stone2-darker shrink-0"><Trash2 size={16} /></button>
+          </Card>
         ))}
       </div>
+
+      {done.length > 0 && (
+        <details>
+          <summary className="text-xs text-stone2-darker font-display cursor-pointer">已买 {done.length} 项</summary>
+          <div className="space-y-2 mt-2">
+            {done.map((item) => (
+              <Card key={item.id} className="flex items-center justify-between py-2.5 opacity-60">
+                <label className="flex items-center gap-2 flex-1 min-w-0">
+                  <input type="checkbox" checked={item.done} onChange={() => toggleDone(item.id)} className="w-4 h-4 accent-pink-dark" />
+                  <span className="font-display line-through">{item.name}</span>
+                </label>
+                <button onClick={() => remove(item.id)} className="text-stone2-darker shrink-0"><Trash2 size={16} /></button>
+              </Card>
+            ))}
+          </div>
+          <Button size="sm" variant="secondary" className="mt-2" onClick={clearDone}>清空已买项目</Button>
+        </details>
+      )}
     </div>
   )
 }
 
 const UNIT_PRESETS_SHOPPING = ['/kg', '粒', '包', '根', '打', '个', '箱']
 
-function ShoppingItem({ item, onRemove, onToggleDone, onAddPrice, onRemovePrice }) {
+function PriceBookSection({ priceBook, setPriceBook }) {
+  const [name, setName] = useState('')
+
+  function addBookItem() {
+    if (!name.trim()) return
+    if (priceBook.some((p) => p.name === name.trim())) return
+    setPriceBook([{ id: genId(), name: name.trim(), prices: [] }, ...priceBook])
+    setName('')
+  }
+  function removeBookItem(id) {
+    setPriceBook(priceBook.filter((p) => p.id !== id))
+  }
+  function addPrice(id, store, price, unit) {
+    if (!store || !price) return
+    setPriceBook(priceBook.map((i) => (i.id === id
+      ? { ...i, prices: [{ id: genId(), store, price: Number(price), unit: unit || '', date: todayStr() }, ...i.prices] }
+      : i)))
+  }
+  function removePrice(itemId, priceId) {
+    setPriceBook(priceBook.map((i) => (i.id === itemId ? { ...i, prices: i.prices.filter((p) => p.id !== priceId) } : i)))
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-stone2-darker">
+        永久保存的比价档案，跟"本次要买"清单是分开的——买了、勾了、清掉清单都不会影响这里的价格记录。
+      </p>
+      <Card>
+        <div className="flex gap-2">
+          <Input placeholder="新增要比价的食材/物品" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addBookItem()} className="flex-1" />
+          <Button onClick={addBookItem}><Plus size={16} /></Button>
+        </div>
+      </Card>
+      {priceBook.length === 0 && <EmptyState emoji="📊" text="还没有比价记录" />}
+      <div className="space-y-3">
+        {priceBook.map((item) => (
+          <PriceBookItem key={item.id} item={item} onRemoveItem={removeBookItem} onAddPrice={addPrice} onRemovePrice={removePrice} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PriceBookItem({ item, onRemoveItem, onAddPrice, onRemovePrice }) {
   const [store, setStore] = useState('')
   const [price, setPrice] = useState('')
   const [unit, setUnit] = useState('')
@@ -141,11 +261,8 @@ function ShoppingItem({ item, onRemove, onToggleDone, onAddPrice, onRemovePrice 
   return (
     <Card>
       <div className="flex items-start justify-between mb-2">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={item.done} onChange={() => onToggleDone(item.id)} className="w-4 h-4 accent-pink-dark" />
-          <span className={`font-display ${item.done ? 'line-through text-stone2-darker' : ''}`}>{item.name}</span>
-        </label>
-        <button onClick={() => onRemove(item.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
+        <span className="font-display">{item.name}</span>
+        <button onClick={() => onRemoveItem(item.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
       </div>
       <div className="flex gap-2 mb-1.5">
         <Input placeholder="商家" value={store} onChange={(e) => setStore(e.target.value)} className="flex-1" />
@@ -180,7 +297,6 @@ function ShoppingItem({ item, onRemove, onToggleDone, onAddPrice, onRemovePrice 
     </Card>
   )
 }
-
 function FrozenTab() {
   const [items, setItems] = useLocalData('inventory_frozen', [])
   const [form, setForm] = useState({ name: '', weightSpec: '', packs: '' })
