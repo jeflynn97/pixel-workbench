@@ -297,58 +297,68 @@ function PriceBookItem({ item, onRemoveItem, onAddPrice, onRemovePrice }) {
     </Card>
   )
 }
+// 把可能还是旧格式（{name, weightSpec, packs} 平铺一行）的数据，
+// 归一化成新格式（{name, specs:[{weightSpec, packs}]}）。
+// 这个函数在渲染时同步调用，不管数据是新是旧、甚至新旧混杂，都能直接安全渲染，不会有"崩溃空白"的窗口期。
+function normalizeFrozenItems(items) {
+  const grouped = {}
+  const order = []
+  items.forEach((i) => {
+    if (!grouped[i.name]) {
+      grouped[i.name] = { id: i.id || genId(), name: i.name, specs: [] }
+      order.push(i.name)
+    }
+    if (Array.isArray(i.specs)) {
+      grouped[i.name].specs.push(...i.specs)
+    } else if (i.weightSpec !== undefined) {
+      grouped[i.name].specs.push({ id: genId(), weightSpec: i.weightSpec, packs: i.packs || 0 })
+    }
+  })
+  return order.map((n) => grouped[n])
+}
+
 function FrozenTab() {
   const [items, setItems] = useLocalData('inventory_frozen', [])
-  const [migrated, setMigrated] = useState(false)
   const [form, setForm] = useState({ name: '', weightSpec: '', packs: '' })
 
-  // 一次性数据迁移：旧格式是"一行一个规格"（weightSpec 直接在最外层），
-  // 迁移成"一个品类一张卡片，里面放多个规格"的结构，同名品类会自动合并
-  useEffect(() => {
-    if (migrated) return
-    const hasOldFormat = items.some((i) => i.weightSpec !== undefined)
-    if (hasOldFormat) {
-      const grouped = {}
-      const order = []
-      items.forEach((i) => {
-        if (!grouped[i.name]) {
-          grouped[i.name] = { id: genId(), name: i.name, specs: [] }
-          order.push(i.name)
-        }
-        grouped[i.name].specs.push({ id: genId(), weightSpec: i.weightSpec, packs: i.packs || 0 })
-      })
-      setItems(order.map((n) => grouped[n]))
-    }
-    setMigrated(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // 每次渲染都先归一化一遍再用，保证界面永远拿到的是安全的新格式数据
+  const normalizedItems = normalizeFrozenItems(items)
 
-  const productNames = items.map((i) => i.name)
+  // 如果检测到存储里还是旧格式，顺手把归一化后的结果写回存储，之后就不用每次都转换了
+  useEffect(() => {
+    const hasOldFormat = items.some((i) => i.weightSpec !== undefined && !Array.isArray(i.specs))
+    if (hasOldFormat) {
+      setItems(normalizedItems)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items])
+
+  const productNames = normalizedItems.map((i) => i.name)
 
   function add() {
     if (!form.name.trim() || !form.weightSpec.trim()) return
     const trimmedName = form.name.trim()
-    const existing = items.find((i) => i.name === trimmedName)
+    const existing = normalizedItems.find((i) => i.name === trimmedName)
     if (existing) {
       // 同名品类已存在：把这个规格加进去，而不是新建一张卡片
-      setItems(items.map((i) => (i.id === existing.id
+      setItems(normalizedItems.map((i) => (i.id === existing.id
         ? { ...i, specs: [...i.specs, { id: genId(), weightSpec: form.weightSpec.trim(), packs: Number(form.packs) || 0 }] }
         : i)))
     } else {
-      setItems([{ id: genId(), name: trimmedName, specs: [{ id: genId(), weightSpec: form.weightSpec.trim(), packs: Number(form.packs) || 0 }] }, ...items])
+      setItems([{ id: genId(), name: trimmedName, specs: [{ id: genId(), weightSpec: form.weightSpec.trim(), packs: Number(form.packs) || 0 }] }, ...normalizedItems])
     }
     setForm({ name: form.name, weightSpec: '', packs: '' })
   }
   function changePacks(productId, specId, delta) {
-    setItems(items.map((i) => (i.id === productId
+    setItems(normalizedItems.map((i) => (i.id === productId
       ? { ...i, specs: i.specs.map((s) => (s.id === specId ? { ...s, packs: Math.max(0, s.packs + delta) } : s)) }
       : i)))
   }
   function removeSpec(productId, specId) {
-    setItems(items.map((i) => (i.id === productId ? { ...i, specs: i.specs.filter((s) => s.id !== specId) } : i)))
+    setItems(normalizedItems.map((i) => (i.id === productId ? { ...i, specs: i.specs.filter((s) => s.id !== specId) } : i)))
   }
   function removeProduct(productId) {
-    setItems(items.filter((i) => i.id !== productId))
+    setItems(normalizedItems.filter((i) => i.id !== productId))
   }
 
   return (
@@ -370,16 +380,16 @@ function FrozenTab() {
           <p className="text-[11px] text-stone2-darker">品名跟已有品类一样的话，会自动把这个规格加进同一张卡片，不会重复建卡</p>
         </div>
       </Card>
-      {items.length === 0 && <EmptyState emoji="❄️" text="还没有冻干库存记录" />}
+      {normalizedItems.length === 0 && <EmptyState emoji="❄️" text="还没有冻干库存记录" />}
       <div className="space-y-2">
-        {items.map((product) => (
+        {normalizedItems.map((product) => (
           <Card key={product.id} className="bg-butter">
             <div className="flex items-center justify-between mb-2">
               <p className="font-display text-sm">{product.name}</p>
               <button onClick={() => removeProduct(product.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
             </div>
             <div className="space-y-1.5">
-              {product.specs.map((s) => (
+              {(product.specs || []).map((s) => (
                 <div key={s.id} className="flex items-center justify-between bg-white pixel-corners-sm border-2 border-ink px-2.5 py-1.5">
                   <span className="text-sm">规格 {s.weightSpec}</span>
                   <div className="flex items-center gap-1.5">
@@ -390,7 +400,7 @@ function FrozenTab() {
                   </div>
                 </div>
               ))}
-              {product.specs.length === 0 && <p className="text-xs text-stone2-darker">还没有规格，在上面表单里给它加一个吧</p>}
+              {(!product.specs || product.specs.length === 0) && <p className="text-xs text-stone2-darker">还没有规格，在上面表单里给它加一个吧</p>}
             </div>
           </Card>
         ))}
