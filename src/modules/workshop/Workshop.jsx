@@ -317,6 +317,24 @@ function normalizeFrozenItems(items) {
   return order.map((n) => grouped[n])
 }
 
+// 库存少于 2 包的品类/规格排到最前面，方便一眼看到该补货的东西
+// 用稳定排序，非低库存的部分保持原本顺序不打乱
+function sortLowStockFirst(items) {
+  return [...items].sort((a, b) => {
+    const aLow = (a.specs || []).some((s) => s.packs < 2) ? 0 : 1
+    const bLow = (b.specs || []).some((s) => s.packs < 2) ? 0 : 1
+    return aLow - bLow
+  })
+}
+
+function sortSpecsLowFirst(specs) {
+  return [...specs].sort((a, b) => {
+    const aLow = a.packs < 2 ? 0 : 1
+    const bLow = b.packs < 2 ? 0 : 1
+    return aLow - bLow
+  })
+}
+
 function FrozenTab() {
   const [items, setItems] = useLocalData('inventory_frozen', [])
   const [form, setForm] = useState({ name: '', weightSpec: '', packs: '' })
@@ -382,28 +400,41 @@ function FrozenTab() {
       </Card>
       {normalizedItems.length === 0 && <EmptyState emoji="❄️" text="还没有冻干库存记录" />}
       <div className="space-y-2">
-        {normalizedItems.map((product) => (
-          <Card key={product.id} className="bg-butter">
-            <div className="flex items-center justify-between mb-2">
-              <p className="font-display text-sm">{product.name}</p>
-              <button onClick={() => removeProduct(product.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
-            </div>
-            <div className="space-y-1.5">
-              {(product.specs || []).map((s) => (
-                <div key={s.id} className="flex items-center justify-between bg-white pixel-corners-sm border-2 border-ink px-2.5 py-1.5">
-                  <span className="text-sm">规格 {s.weightSpec}</span>
-                  <div className="flex items-center gap-1.5">
-                    <button onClick={() => changePacks(product.id, s.id, -1)} className="pixel-corners-sm border-2 border-ink bg-white p-1"><Minus size={13} /></button>
-                    <span className="w-9 text-center text-sm">{s.packs}包</span>
-                    <button onClick={() => changePacks(product.id, s.id, 1)} className="pixel-corners-sm border-2 border-ink bg-white p-1"><Plus size={13} /></button>
-                    <button onClick={() => removeSpec(product.id, s.id)} className="text-stone2-darker ml-1"><Trash2 size={14} /></button>
-                  </div>
-                </div>
-              ))}
-              {(!product.specs || product.specs.length === 0) && <p className="text-xs text-stone2-darker">还没有规格，在上面表单里给它加一个吧</p>}
-            </div>
-          </Card>
-        ))}
+        {sortLowStockFirst(normalizedItems).map((product) => {
+          const lowCount = (product.specs || []).filter((s) => s.packs < 2).length
+          return (
+            <Card key={product.id} className="bg-butter">
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-display text-sm flex items-center gap-1.5">
+                  {product.name}
+                  {lowCount > 0 && (
+                    <span className="text-[10px] bg-pink text-ink px-1.5 py-0.5 pixel-corners-sm border border-ink">
+                      ⚠️ {lowCount} 个规格库存低
+                    </span>
+                  )}
+                </p>
+                <button onClick={() => removeProduct(product.id)} className="text-stone2-darker"><Trash2 size={16} /></button>
+              </div>
+              <div className="space-y-1.5">
+                {sortSpecsLowFirst(product.specs || []).map((s) => {
+                  const isLow = s.packs < 2
+                  return (
+                    <div key={s.id} className={`flex items-center justify-between pixel-corners-sm border-2 border-ink px-2.5 py-1.5 ${isLow ? 'bg-pink-light' : 'bg-white'}`}>
+                      <span className="text-sm">规格 {s.weightSpec}{isLow && <span className="text-[10px] text-pink-dark ml-1">库存低</span>}</span>
+                      <div className="flex items-center gap-1.5">
+                        <button onClick={() => changePacks(product.id, s.id, -1)} className="pixel-corners-sm border-2 border-ink bg-white p-1"><Minus size={13} /></button>
+                        <span className="w-9 text-center text-sm">{s.packs}包</span>
+                        <button onClick={() => changePacks(product.id, s.id, 1)} className="pixel-corners-sm border-2 border-ink bg-white p-1"><Plus size={13} /></button>
+                        <button onClick={() => removeSpec(product.id, s.id)} className="text-stone2-darker ml-1"><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                  )
+                })}
+                {(!product.specs || product.specs.length === 0) && <p className="text-xs text-stone2-darker">还没有规格，在上面表单里给它加一个吧</p>}
+              </div>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )
