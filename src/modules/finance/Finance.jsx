@@ -438,7 +438,7 @@ function RecordTab({
 
       <SectionTitle>最近记录</SectionTitle>
       <div className="space-y-2">
-        {mode === 'expense' && transactions.map((t) => (
+        {mode === 'expense' && [...transactions].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)).map((t) => (
           <Card key={t.id} className="flex items-center justify-between py-2.5">
             <div className="min-w-0">
               <p className="font-display text-sm truncate">
@@ -454,7 +454,7 @@ function RecordTab({
             </div>
           </Card>
         ))}
-        {mode === 'income' && incomeRecords.map((r) => (
+        {mode === 'income' && [...incomeRecords].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)).map((r) => (
           <Card key={r.id} className="flex items-center justify-between py-2.5">
             <div className="min-w-0">
               <p className="font-display text-sm truncate">{r.category}</p>
