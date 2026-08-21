@@ -316,20 +316,15 @@ function normalizeFrozenItems(items) {
 
 // 库存判断改成看"这个品类所有规格加起来的总包数"，而不是单独看某一个规格
 // 比如 800g 剩 1 包、400g 还有 5 包，总数 6 包，不该被标成库存低
-const LOW_STOCK_THRESHOLD = 2
+const LOW_STOCK_THRESHOLD = 4
 
 function getTotalPacks(product) {
   return (product.specs || []).reduce((sum, s) => sum + Number(s.packs || 0), 0)
 }
 
-// 总数低于警戒线的品类排到最前面，方便一眼看到该补货的东西
-// 用稳定排序，非低库存的部分保持原本顺序不打乱
-function sortLowStockFirst(items) {
-  return [...items].sort((a, b) => {
-    const aLow = getTotalPacks(a) < LOW_STOCK_THRESHOLD ? 0 : 1
-    const bLow = getTotalPacks(b) < LOW_STOCK_THRESHOLD ? 0 : 1
-    return aLow - bLow
-  })
+// 按总包数从少到多排列：库存最少的排最上面，最多的排最下面
+function sortByTotalAscending(items) {
+  return [...items].sort((a, b) => getTotalPacks(a) - getTotalPacks(b))
 }
 
 function FrozenTab() {
@@ -394,7 +389,7 @@ function FrozenTab() {
       </Card>
       {normalizedItems.length === 0 && <EmptyState emoji="❄️" text="还没有冻干库存记录" />}
       <div className="space-y-2">
-        {sortLowStockFirst(normalizedItems).map((product) => {
+        {sortByTotalAscending(normalizedItems).map((product) => {
           const total = getTotalPacks(product)
           const isLow = total < LOW_STOCK_THRESHOLD
           return (
